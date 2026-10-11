@@ -3,5 +3,5 @@
  * ไฟล์นี้ไม่มีข้อมูลลับ — ลิงก์นี้คือลิงก์เดียวกับที่ใช้เปิดเว็บอยู่แล้ว
  */
 window.ITC_CONFIG = {
-  apiUrl: 'วางลิงก์ /exec ตรงนี้'
+  apiUrl: 'https://script.google.com/macros/s/AKfycbym-0Q2_JJ8c-BntCwG8zAEXVaUmlM1YszqQtRFAEHMJpk0kNUp1Sdpf-ptfdefcHUjGQ/exec'
 };
