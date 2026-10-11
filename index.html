@@ -792,7 +792,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-12-1"></script>
+  <script src="config.js?v=2026-10-12-2"></script>
   <script>
   /* =====================================================================
      หน้าเว็บนี้ไม่มีข้อมูลลับใด ๆ
@@ -2314,6 +2314,7 @@
           if (kind === 'ask') res.task.ask = { q: now, qBy: me().name, a: '', aBy: '' };
           else if (kind === 'comment' && t.ask && t.ask.q && !t.ask.a) res.task.ask = { q: t.ask.q, qBy: t.ask.qBy, a: now, aBy: me().name };
           else if (kind === 'comment' && t.status === REVIEW && !ownerTurn(t)) res.task.turn = { owner: true, at: now, by: me().name, replied: false, rAt: '' };
+          pushHistory(t.id, res.entry);
           if ((kind === 'progress' || kind === 'ask' || kind === 'reply') && ownerTurn(t)) res.task.turn = { owner: false, at: t.turn.at, by: t.turn.by, replied: true, rAt: now };
           after(res.task, kind === 'reply' ? 'ตอบกลับแล้ว — งานกลับไปที่ ' + askTo : kind === 'ask' ? 'ส่งคำถามถึง ' + askTo + ' แล้ว' : kind === 'progress' ? 'บันทึกความคืบหน้าแล้ว' : (t.ask && t.ask.q && !t.ask.a ? 'ตอบกลับแล้ว — ออกจากงานรอตรวจแล้ว' : t.status === REVIEW ? 'ส่งความคิดเห็นแล้ว — ย้ายไปรอผู้รับผิดชอบตอบ' : 'ส่งความคิดเห็นแล้ว')); });
       });
@@ -2445,9 +2446,21 @@
       });
     }
 
-    var HISTORY_DOT = { 'ยกเลิกงาน': 't-cancel', 'ส่งตรวจ': 't-submit', 'ขอแก้ไข': 't-revise', 'ตรวจรับ': 't-approve', 'ความคิดเห็น': 't-comment', 'อัปเดตความคืบหน้า': 't-comment', 'ขอความเห็น': 't-revise', 'สร้างงาน': 't-create' };
+    var HISTORY_DOT = { 'ยกเลิกงาน': 't-cancel', 'ส่งตรวจ': 't-submit', 'ขอแก้ไข': 't-revise', 'ตรวจรับ': 't-approve', 'ความคิดเห็น': 't-comment', 'อัปเดตความคืบหน้า': 't-comment', 'ขอความเห็น': 't-revise', 'ตอบกลับผู้ตรวจ': 't-comment', 'สร้างงาน': 't-create' };
+    var histCache = {};   // ประวัติที่เคยโหลด (เฉพาะในหน้านี้) — เปิดงานเดิมซ้ำแสดงทันที แล้วค่อยอัปเดตเบื้องหลัง
     function loadHistory(id) {
+      if (histCache[id]) drawHistory(id, histCache[id]);
       callAuthed('getTaskHistory', id).then(function (items) {
+        histCache[id] = items;
+        drawHistory(id, items);
+      }).catch(function (err) {
+        if (err.handled || !$('#historyBox') || histCache[id]) return;
+        $('#historyBox').innerHTML = '<div class="notice notice-error">โหลดประวัติไม่สำเร็จ: ' + esc(cleanError(err)) + '</div>';
+      });
+    }
+    /** เพิ่มรายการประวัติที่เพิ่งบันทึก (จากผลการบันทึก) เข้าแคช ให้หน้าต่างงานแสดงทันที */
+    function pushHistory(id, entry) { if (entry && histCache[id]) histCache[id] = [entry].concat(histCache[id]); }
+    function drawHistory(id, items) {
         if (state.openTaskId !== id || !$('#historyBox')) return;
         if (!items.length) { $('#historyBox').innerHTML = '<div class="muted">ยังไม่มีประวัติในระบบ' + (/^N-/.test(id) ? ' (งานนี้นำเข้าจาก Notion — ประวัติจะเริ่มบันทึกตั้งแต่การแก้ไขครั้งถัดไป)' : '') + '</div>'; return; }
         $('#historyBox').innerHTML = '<ul class="timeline">' + items.map(function (h) {
@@ -2456,10 +2469,6 @@
             (h.detail ? '<div class="tl-body">' + esc(h.detail) + '</div>' : '') +
             (isSafeUrl(h.link) ? '<div class="tl-link">' + linkHtml(h.link) + '</div>' : '') + '</li>';
         }).join('') + '</ul>';
-      }).catch(function (err) {
-        if (err.handled || !$('#historyBox')) return;
-        $('#historyBox').innerHTML = '<div class="notice notice-error">โหลดประวัติไม่สำเร็จ: ' + esc(cleanError(err)) + '</div>';
-      });
     }
 
     /* ---------------- แบบฟอร์มสร้างงาน ---------------- */
@@ -2939,7 +2948,7 @@
     /* ---------------- เข้าสู่ระบบ / ตั้งรหัสใหม่ / ออกจากระบบ ---------------- */
     function showLogin(notice) {
       closeModal(true);
-      state.boot = null; state.tasks = []; state.pendingPassword = ''; state.settings = null;
+      state.boot = null; state.tasks = []; state.pendingPassword = ''; state.settings = null; histCache = {};
       showScreen('login');
       $('#loginForm').hidden = false; $('#pwForm').hidden = true;
       $('#loginNotice').innerHTML = notice ? '<div class="notice notice-warn">' + esc(notice) + '</div>' : '';
