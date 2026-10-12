@@ -5,7 +5,7 @@
   <meta name="theme-color" content="#0F4D00">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Task Center">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" href="icons/favicon-48.png">
@@ -77,6 +77,7 @@
       color: #fff;
       position: fixed; inset: 0 auto 0 0;
       display: flex; flex-direction: column;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;   /* จอเตี้ย: เลื่อนดูเมนูได้ */
       z-index: 40;
       transition: transform .25s ease;
     }
@@ -399,7 +400,7 @@
 
     /* ---------------- Login ---------------- */
     .boot { min-height: 100vh; display: grid; place-items: center; color: var(--text-muted); text-align: center; }
-    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px; background: var(--bg); }
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: calc(32px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom)); background: var(--bg); }
     .login-wrap[hidden], .app[hidden], .boot[hidden] { display: none; }
     .login-card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
     .login-brand { background: var(--brand-green-dark); color: #fff; padding: 26px 28px 22px; }
@@ -439,7 +440,7 @@
 
     /* ---------------- Toast ---------------- */
     .toast {
-      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+      position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
       background: #1E2B1A; color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 14px;
       box-shadow: 0 8px 24px rgba(0,0,0,.2); opacity: 0; pointer-events: none; transition: all .25s; z-index: 80; max-width: calc(100% - 32px);
     }
@@ -454,13 +455,13 @@
     }
 
     @media (max-width: 900px) {
-      .sidebar { transform: translateX(-100%); box-shadow: 0 0 40px rgba(0,0,0,.25); }
+      .sidebar { transform: translateX(-100%); box-shadow: 0 0 40px rgba(0,0,0,.25); padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
       body.nav-open .sidebar { transform: translateX(0); }
       body.nav-open .overlay { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 30; }
       .main { margin-left: 0; }
       .btn.menu-btn { display: inline-flex; }
       .nav-close { display: inline-flex; }
-      .topbar { padding: 12px 16px; gap: 10px; }
+      .topbar { padding: calc(12px + env(safe-area-inset-top)) 16px 12px; gap: 10px; }
       .page-head { min-width: 0; }
       .page-title { font-size: 18px; }
       .page-sub { display: none; }
@@ -493,7 +494,8 @@
       .modal-backdrop { padding: 0; align-items: flex-start; }
       .modal { border-radius: 0; min-height: 100vh; min-height: 100dvh; max-width: none; }
       .modal-head, .modal-body, .modal-foot { padding-left: 16px; padding-right: 16px; }
-      .modal-foot { position: sticky; bottom: 0; background: var(--surface); }
+      .modal-foot { position: sticky; bottom: 0; background: var(--surface); padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+      .modal-head { padding-top: calc(20px + env(safe-area-inset-top)); }
       .form-grid { grid-template-columns: 1fr; }
       .detail-grid { grid-template-columns: 1fr 1fr; }
     }
@@ -792,7 +794,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-12-2"></script>
+  <script src="config.js?v=2026-10-12-4"></script>
   <script>
   /* =====================================================================
      หน้าเว็บนี้ไม่มีข้อมูลลับใด ๆ
@@ -951,6 +953,12 @@
     function seesAll() { return role() === 'admin' || role() === 'executive'; }
     function myDepts() { return (state.boot && state.boot.user.depts) || []; }
     function shareDept(list) { var mine = myDepts(); return (list || []).some(function (d) { return mine.indexOf(d) > -1; }); }
+    /** หัวหน้าฝ่าย (ที่ระบุทีมแล้ว): รายงานผลงาน และรายการงานทั้งหมด แสดงเฉพาะงานของทีมตัวเอง */
+    function headScoped() { return role() === 'head' && myDepts().length > 0; }
+    function personDepts(name) { var p = state.boot.people.filter(function (x) { return x.name === name; })[0]; return (p && p.depts) || []; }
+    function isMyTeamPerson(name) { return shareDept(personDepts(name)); }
+    /** งานของทีม = ทีมที่รับงานเป็นทีมเรา หรือมีผู้รับผิดชอบเป็นคนในทีมเรา */
+    function isMyTeamTask(t) { return (!!t.team && myDepts().indexOf(t.team) > -1) || (t.owners || []).some(isMyTeamPerson); }
     function findTask(id) { return state.tasks.filter(function (x) { return x.id === id; })[0] || null; }
     function setTask(t) {
       var i = state.tasks.map(function (x) { return x.id; }).indexOf(t.id);
@@ -1213,6 +1221,7 @@
       var teams = state.boot.teams.slice();
       if (seesAll()) return teams;
       var mine = teams.filter(function (t) { return myDepts().indexOf(t) > -1; });
+      if (headScoped()) return mine;
       state.tasks.forEach(function (t) { (t.depts || []).forEach(function (d) { if (teams.indexOf(d) > -1) mine.push(d); }); });
       return uniq(mine);
     }
@@ -1419,7 +1428,7 @@
       if (view === 'assigned') return periodTasks().filter(function (t) { return t.perms.involvement.assigner; });
       if (view === 'review') return reviewInbox();
       if (view === 'toassign') return assignQueue();
-      return periodTasks();
+      return headScoped() ? periodTasks().filter(isMyTeamTask) : periodTasks();
     }
     function applyListFilter(list, f) {
       var q = (f.q || '').toLowerCase();
@@ -1465,7 +1474,7 @@
       else if (f.tab === 'team') html += '<div class="field search-field"><label for="dTeam">เลือกทีม</label><select class="select" id="dTeam">' + options(teams, f.team) + '</select>' +
         (teams.length ? '' : '<span class="hint">บัญชีของคุณยังไม่ได้ระบุทีม — ติดต่อผู้ดูแลระบบ</span>') + '</div>';
       else html += '<p class="summary-caption" style="margin:-6px 0 14px">ขอบเขต: ' +
-        esc(seesAll() ? 'งานทุกทีมในระบบ' : role() === 'head' ? 'งานของทีม ' + (myDepts().join(', ') || '—') + ' และงานที่คุณเกี่ยวข้อง' : 'งานที่คุณรับผิดชอบ มอบหมาย หรือเป็นผู้ตรวจ') + '</p>';
+        esc(seesAll() ? 'งานทุกทีมในระบบ' : role() === 'head' ? (headScoped() ? 'งานของทีม ' + myDepts().join(', ') + ' เท่านั้น (งานของคุณกับทีมอื่นดูได้ที่งานของฉัน / งานที่ฉันมอบหมาย / งานรอตรวจ)' : 'งานที่คุณเกี่ยวข้อง — ยังไม่ได้ระบุทีมของคุณ') : 'งานที่คุณรับผิดชอบ มอบหมาย หรือเป็นผู้ตรวจ') + '</p>';
       if (f.tab !== 'overall') html += '</div>';
       html += '<div id="results"></div>';
       $('#content').innerHTML = banner() + html;
@@ -1481,7 +1490,7 @@
       var f = state.filters.dashboard, all, title, extra = '';
       if (f.tab === 'teams') { $('#results').innerHTML = allTeamsDashboard(); bindTeamCards(); bindStatCards({}); return; }
       var scopeFilter = {};
-      var ptasks = periodTasks();
+      var ptasks = headScoped() ? periodTasks().filter(isMyTeamTask) : periodTasks();   // หัวหน้าฝ่าย: ตัวเลขตรงกับรายการงานทั้งหมด
       if (f.tab === 'person') {
         all = ptasks.filter(function (t) { return (t.owners || []).indexOf(f.person) > -1; });
         title = 'งานของ ' + f.person; scopeFilter.owner = f.person;
@@ -1753,6 +1762,7 @@
     function reportScope() {
       var f = state.filters.report;
       return state.tasks.filter(function (t) {
+        if (headScoped() && !isMyTeamTask(t)) return false;       // หัวหน้าฝ่าย: เฉพาะงานของทีมตัวเอง
         if (f.assigner && t.assigner !== f.assigner) return false;
         if (f.team && (t.depts || []).indexOf(f.team) === -1) return false;
         return true;
@@ -1799,6 +1809,7 @@
       var names = [];
       list.forEach(function (t) { (t.owners || []).forEach(function (n) { if (names.indexOf(n) === -1) names.push(n); }); });
       if (role() === 'employee') names = names.filter(function (n) { return n === me().name; });
+      else if (headScoped()) names = names.filter(isMyTeamPerson);       // หัวหน้าฝ่าย: เฉพาะคนในทีม
       var rows = names.map(function (n) {
         var ps = perfStats(list.filter(function (t) { return (t.owners || []).indexOf(n) > -1; }));
         ps.name = n; return ps;
