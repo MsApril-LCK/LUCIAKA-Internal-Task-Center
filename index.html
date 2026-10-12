@@ -336,6 +336,14 @@
     .ck-mine-title .count { font-weight: 400; color: var(--text-muted); font-size: 13px; }
     .ck-mine-lock { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 400; color: var(--text-muted); }
     .ck-mine-lock .icon, .ck-mine-title .icon { width: 16px; height: 16px; }
+    .ck-mine-right { display: inline-flex; align-items: center; gap: 14px; }
+    .ck-mine-toggle { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--brand-green, #176F00); padding: 4px 10px; border-radius: 999px; background: var(--surface-2); }
+    .ck-mine-toggle::after { content: '▾'; font-size: 12px; }
+    details.ck-mine[open] .ck-mine-toggle::after { content: '▴'; }
+    details.ck-mine .ck-mine-toggle .t-close { display: none; }
+    details.ck-mine[open] .ck-mine-toggle .t-open { display: none; }
+    details.ck-mine[open] .ck-mine-toggle .t-close { display: inline; }
+    .ck-mine-quick { padding: 2px 18px 12px; }
     .ck-mine-foot { padding: 10px 18px 14px; border-top: 1px solid var(--border); }
     .ck-empty { padding: 28px 18px; text-align: center; color: var(--text-muted); border-top: 1px solid var(--border); }
     .ck-item.busy { opacity: .55; pointer-events: none; }
@@ -797,7 +805,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-13-5"></script>
+  <script src="config.js?v=2026-10-13-8"></script>
   <script>
   /* =====================================================================
      หน้าเว็บนี้ไม่มีข้อมูลลับใด ๆ
@@ -2715,47 +2723,108 @@
     /** กล่องเช็กลิสต์ส่วนตัวในหน้า "งานของฉัน" — แสดงรายการที่ยังไม่เสร็จ เพิ่ม/ติ๊กได้ทันที */
     function drawMineChecklist() {
       var wrap = $('#ckMine'); if (!wrap) return;
-      var open = ckSort(state.checklist || [], false);
-      var doneN = (state.checklist || []).length - open.length;
-      if (state.ckMineOpen === undefined) state.ckMineOpen = true;
+      var allOpen = ckSort(state.checklist || [], false);
+      var doneN = (state.checklist || []).length - allOpen.length;
+      var mq = state.ckMineQuick || '';
+      var open = allOpen.filter(function (i) { return ckQuickMatch(i, mq); });
+      var mineChips = '<div class="quick ck-mine-quick"><span class="field-label">ตัวกรองด่วน:</span>' + CK_QUICK.map(function (x) {
+        var n = allOpen.filter(function (i) { return ckQuickMatch(i, x[0]); }).length;
+        return '<button class="qchip" type="button" data-ckmq="' + x[0] + '" aria-pressed="' + (mq === x[0]) + '">' + icon(x[2]) + x[1] + ' <span class="n">' + n + '</span></button>';
+      }).join('') + '</div>';
+      if (state.ckMineOpen === undefined) { try { state.ckMineOpen = localStorage.getItem('itc_ckmine') === '1'; } catch (e) { state.ckMineOpen = false; } }   // ค่าเริ่มต้น: พับไว้ (จำค่าที่ผู้ใช้กดไว้ในเครื่อง)
       wrap.innerHTML = '<details class="panel ck-mine"' + (state.ckMineOpen ? ' open' : '') + '>' +
-        '<summary><span class="ck-mine-title">' + icon('checklist') + 'เช็กลิสต์ส่วนตัว <span class="count">ยังไม่เสร็จ ' + open.length + ' รายการ</span></span>' +
-          '<span class="ck-mine-lock">' + icon('lock') + 'เห็นเฉพาะคุณ</span></summary>' +
+        '<summary><span class="ck-mine-title">' + icon('checklist') + 'เช็กลิสต์ส่วนตัว <span class="count">ยังไม่เสร็จ ' + allOpen.length + ' รายการ</span></span>' +
+          '<span class="ck-mine-right"><span class="ck-mine-lock">' + icon('lock') + 'เห็นเฉพาะคุณ</span><span class="ck-mine-toggle"><span class="t-open">กดเพื่อดู</span><span class="t-close">ซ่อน</span></span></span></summary>' +
         '<form class="ck-add" id="ckForm" novalidate>' +
           '<input class="input" id="ckText" maxlength="300" placeholder="เพิ่มรายการส่วนตัว เช่น โทรนัดซัพพลายเออร์" autocomplete="off" aria-label="รายการใหม่">' +
           '<input class="input" id="ckDue" type="date" aria-label="กำหนดวัน (ไม่บังคับ)" title="กำหนดวัน (ไม่บังคับ)">' +
           '<button class="btn btn-primary" type="submit" id="ckAdd">' + icon('plus') + 'เพิ่ม</button></form>' +
-        '<div id="ckError" style="padding:0 18px"></div>' +
-        (open.length ? '<ul class="ck-list">' + open.map(ckItemHtml).join('') + '</ul>' : '<div class="ck-empty">ไม่มีรายการค้าง 🎉</div>') +
+        '<div id="ckError" style="padding:0 18px"></div>' + (allOpen.length ? mineChips : '') +
+        (open.length ? '<ul class="ck-list">' + open.map(ckItemHtml).join('') + '</ul>' : '<div class="ck-empty">' + (mq ? 'ไม่มีรายการในตัวกรองนี้' : 'ไม่มีรายการค้าง 🎉') + '</div>') +
         '<div class="ck-mine-foot"><button class="btn btn-sm" type="button" id="ckGoAll">ดูรายการที่เสร็จแล้ว (' + doneN + ') / จัดการเช็กลิสต์</button></div>' +
         '</details>';
-      $('details.ck-mine', wrap).addEventListener('toggle', function () { state.ckMineOpen = this.open; });
+      $('details.ck-mine', wrap).addEventListener('toggle', function () { state.ckMineOpen = this.open; try { localStorage.setItem('itc_ckmine', this.open ? '1' : '0'); } catch (e) { /* ไม่เป็นไร */ } });
       $('#ckGoAll').addEventListener('click', function () { setView('checklist'); });
-      bindChecklist();
+      $$('[data-ckmq]', wrap).forEach(function (b) {
+        b.addEventListener('click', function () { var k = b.getAttribute('data-ckmq'); state.ckMineQuick = state.ckMineQuick === k ? '' : k; drawMineChecklist(); });
+      });
+      bindChecklistForm(); bindChecklistItems(wrap);
+    }
+    var CK_PRIVATE_NOTE = '<div class="ck-private">' + icon('lock') + 'เห็นเฉพาะคุณ — ไม่แสดงให้หัวหน้า ผู้ดูแลระบบ หรือคนอื่นในเว็บ และไม่นับใน Dashboard</div>';
+    var CK_QUICK = [['', 'ทั้งหมด', 'list'], ['overdue', 'เลยกำหนด', 'alert'], ['today', 'วันนี้', 'clock'], ['week', '7 วันข้างหน้า', 'calendar'], ['nodue', 'ไม่มีกำหนด', 'checklist']];
+    var CK_SORTS = [['due', 'กำหนดวันใกล้สุดก่อน'], ['new', 'เพิ่มล่าสุดก่อน'], ['old', 'เพิ่มก่อนอยู่บน']];
+    function ckFilter() { return state.ckFilter || (state.ckFilter = { q: '', quick: '', sort: 'due' }); }
+    function ckQuickMatch(i, k) {
+      if (!k) return true;
+      if (k === 'nodue') return !i.dueDate;
+      if (!i.dueDate) return false;
+      var d = daysFromToday(i.dueDate);
+      return k === 'overdue' ? d < 0 : k === 'today' ? d === 0 : d >= 0 && d <= 7;
+    }
+    function ckOrder(list, mode) {
+      if (mode === 'new' || mode === 'old') {
+        var all = state.checklist || [];                       // ลำดับในชีต = ลำดับที่เพิ่ม
+        var pos = function (i) { var t = Date.parse(i.createdTime); return [isNaN(t) ? 0 : t, all.indexOf(i)]; };
+        return list.slice().sort(function (a, b) {
+          var x = pos(a), y = pos(b), d = (x[0] - y[0]) || (x[1] - y[1]);
+          return mode === 'new' ? -d : d;
+        });
+      }
+      return list;
     }
     function renderChecklist() {
-      var list = state.checklist || [];
-      var open = ckSort(list, false), done = ckSort(list, true);
+      var f = ckFilter();
       $('#content').innerHTML =
         '<section class="panel" style="margin-bottom:20px"><form class="ck-add" id="ckForm" novalidate>' +
           '<input class="input" id="ckText" maxlength="300" placeholder="เพิ่มรายการ เช่น โทรนัดซัพพลายเออร์" autocomplete="off" aria-label="รายการใหม่">' +
           '<input class="input" id="ckDue" type="date" aria-label="กำหนดวัน (ไม่บังคับ)" title="กำหนดวัน (ไม่บังคับ)">' +
           '<button class="btn btn-primary" type="submit" id="ckAdd">' + icon('plus') + 'เพิ่ม</button></form>' +
-        '<div class="ck-private">' + icon('lock') + 'เห็นเฉพาะคุณ — ไม่แสดงให้หัวหน้า ผู้ดูแลระบบ หรือคนอื่นในเว็บ และไม่นับใน Dashboard</div>' +
+        CK_PRIVATE_NOTE +
         '<div id="ckError" style="padding:0 18px"></div></section>' +
-        '<section class="panel" style="margin-bottom:20px"><div class="panel-head"><h2 class="panel-title">ยังไม่เสร็จ</h2><span class="count">' + open.length + ' รายการ</span></div>' +
-        (open.length ? '<ul class="ck-list">' + open.map(ckItemHtml).join('') + '</ul>' : '<div class="ck-empty">ไม่มีรายการค้าง 🎉</div>') + '</section>' +
-        '<section class="panel"><div class="panel-head"><h2 class="panel-title">เสร็จแล้ว</h2>' +
-          (done.length ? '<button class="btn btn-sm" type="button" id="ckClear">ล้างรายการที่เสร็จ (' + done.length + ')</button>' : '<span class="count">0 รายการ</span>') + '</div>' +
-        (done.length ? '<ul class="ck-list">' + done.map(ckItemHtml).join('') + '</ul>' : '<div class="ck-empty">ติ๊กรายการที่ทำเสร็จ จะย้ายมาอยู่ตรงนี้</div>') + '</section>';
-      bindChecklist();
+        '<div class="filters cols-2" role="search" style="margin-bottom:16px"><div class="field search-field"><label for="ckQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
+          '<input class="input" id="ckQ" type="search" placeholder="พิมพ์คำในรายการ…" value="' + esc(f.q) + '" autocomplete="off"></div></div>' +
+        '<div class="field"><label for="ckSortSel">เรียงตาม</label><select class="select" id="ckSortSel">' +
+          CK_SORTS.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === f.sort ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></div>' +
+        '<div class="actions"><button class="btn" type="button" id="ckReset">ล้างตัวกรอง</button></div>' +
+        '<div class="quick" id="ckQuick"></div></div>' +
+        '<div id="ckResults"></div>';
+      bindChecklistForm();
+      $('#ckQ').addEventListener('input', function () { f.q = this.value; drawChecklistResults(); });
+      $('#ckSortSel').addEventListener('change', function () { f.sort = this.value; drawChecklistResults(); });
+      $('#ckReset').addEventListener('click', function () { state.ckFilter = null; renderChecklist(); });
+      drawChecklistResults();
+    }
+    function drawChecklistResults() {
+      var f = ckFilter(), list = state.checklist || [];
+      var allOpen = ckSort(list, false);
+      var q = f.q.trim().toLowerCase();
+      var match = function (i) { return !q || String(i.text).toLowerCase().indexOf(q) > -1; };
+      $('#ckQuick').innerHTML = '<span class="field-label">ตัวกรองด่วน:</span>' + CK_QUICK.map(function (x) {
+        var n = allOpen.filter(function (i) { return match(i) && ckQuickMatch(i, x[0]); }).length;
+        return '<button class="qchip" type="button" data-ckq="' + x[0] + '" aria-pressed="' + (f.quick === x[0]) + '">' + icon(x[2]) + x[1] + ' <span class="n">' + n + '</span></button>';
+      }).join('');
+      $$('#ckQuick [data-ckq]').forEach(function (b) {
+        b.addEventListener('click', function () { var k = b.getAttribute('data-ckq'); f.quick = f.quick === k ? '' : k; drawChecklistResults(); });
+      });
+      var open = ckOrder(allOpen.filter(function (i) { return match(i) && ckQuickMatch(i, f.quick); }), f.sort);
+      var done = ckSort(list, true).filter(match);
+      var filtered = !!(q || f.quick);
+      var label = (CK_QUICK.filter(function (x) { return x[0] === f.quick; })[0] || [])[1];
+      $('#ckResults').innerHTML =
+        '<section class="panel" style="margin-bottom:20px"><div class="panel-head"><h2 class="panel-title">ยังไม่เสร็จ' + (f.quick ? ' · ' + esc(label) : '') + '</h2><span class="count">' +
+          open.length + (filtered ? ' จาก ' + allOpen.length : '') + ' รายการ</span></div>' +
+        (open.length ? '<ul class="ck-list">' + open.map(ckItemHtml).join('') + '</ul>' : '<div class="ck-empty">' + (filtered ? 'ไม่พบรายการที่ตรงกับตัวกรอง' : 'ไม่มีรายการค้าง 🎉') + '</div>') + '</section>' +
+        (f.quick ? '' : '<section class="panel"><div class="panel-head"><h2 class="panel-title">เสร็จแล้ว</h2>' +
+          (done.length ? '<button class="btn btn-sm" type="button" id="ckClear">ล้างรายการที่เสร็จ (' + ckSort(list, true).length + ')</button>' : '<span class="count">0 รายการ</span>') + '</div>' +
+        (done.length ? '<ul class="ck-list">' + done.map(ckItemHtml).join('') + '</ul>' : '<div class="ck-empty">' + (q ? 'ไม่พบรายการที่เสร็จแล้วที่ตรงกับคำค้น' : 'ติ๊กรายการที่ทำเสร็จ จะย้ายมาอยู่ตรงนี้') + '</div>') + '</section>');
+      bindChecklistItems();
     }
     function ckFind(id) { return (state.checklist || []).filter(function (i) { return i.id === id; })[0]; }
     function ckReplace(item) {
       var idx = state.checklist.map(function (i) { return i.id; }).indexOf(item.id);
       if (idx > -1) state.checklist[idx] = item; else state.checklist.push(item);
     }
-    function bindChecklist() {
+    function bindChecklistForm() {
       var form = $('#ckForm'), busyAdd = false;
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -2773,7 +2842,9 @@
           if (!err.handled) showError('#ckError', 'เพิ่มไม่สำเร็จ: ' + cleanError(err));
         });
       });
-      $$('.ck-item').forEach(function (li) {
+    }
+    function bindChecklistItems(root) {
+      $$('.ck-item', root || $('#ckResults')).forEach(function (li) {
         var id = li.getAttribute('data-ck'), item = ckFind(id);
         var fail = function (err, msg) { li.classList.remove('busy'); if (!err.handled) toast(msg + cleanError(err)); };
         $('.ck-check', li).addEventListener('change', function () {
