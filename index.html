@@ -420,6 +420,7 @@
     .role-tag { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; background: var(--neutral-soft); color: var(--neutral); }
     .role-tag.r-admin { background: var(--brand-orange-soft); color: #8A3F00; }
     .role-tag.r-executive { background: #E8F0FC; color: #1D5FBF; }
+    .role-tag.r-assistant { background: #EEF6FB; color: #2A6F97; }
     .role-tag.r-head { background: var(--brand-green-soft); color: var(--brand-green); }
 
     /* ---------------- Sidebar user ---------------- */
@@ -536,6 +537,8 @@
     .cell-action { text-align: right; white-space: nowrap; }
     .tag-line { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
     .tag-mini { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+    .tag-private { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; background: #F3EEFB; color: #5B3A9A; border: 1px solid #DCCFF2; display: inline-flex; gap: 4px; align-items: center; }
+    .tag-private svg { width: 12px; height: 12px; }
     .tag-mini.warn { background: var(--warning-soft); color: var(--warning); border-color: #F8D9A8; }
 
     .detail-grid .person, .people .person { white-space: normal; word-break: break-word; }
@@ -794,7 +797,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-12-4"></script>
+  <script src="config.js?v=2026-10-13-4"></script>
   <script>
   /* =====================================================================
      หน้าเว็บนี้ไม่มีข้อมูลลับใด ๆ
@@ -847,6 +850,20 @@
     var SORTS = [['due', 'กำหนดส่งใกล้สุดก่อน'], ['new', 'งานใหม่ล่าสุดก่อน'], ['update', 'อัปเดตล่าสุดก่อน']];
     function savedSort() { try { var v = localStorage.getItem('itc_sort'); return SORTS.some(function (x) { return x[0] === v; }) ? v : 'due'; } catch (e) { return 'due'; } }
     function saveSort(v) { try { localStorage.setItem('itc_sort', v); } catch (e) { /* ไม่เป็นไร */ } }
+    var REVIEW_SORTS = [['wait', 'รอตรวจนานสุดก่อน'], ['sent', 'ส่งมาล่าสุดก่อน'], ['due', 'กำหนดส่งใกล้สุดก่อน']];
+    var REVIEW_WAITS = [['', 'ทั้งหมด'], ['warn', 'รอเกิน 3 วันทำการ'], ['late', 'รอเกิน 5 วันทำการ'], ['ask', 'เฉพาะคำถามขอความเห็น']];
+    /** เวลาที่เริ่มรอผู้ตรวจ: ส่งตรวจ (หรือผู้รับผิดชอบตอบกลับล่าสุด) · คำถามขอความเห็น = เวลาที่ถาม */
+    function reviewSince(t) {
+      if (t.status === REVIEW && !ownerTurn(t)) return (t.flow && t.flow.wait) || t.submittedAt || '';
+      return (askPending(t) && t.ask.q) || t.lastUpdateAt || '';
+    }
+    function reviewWaitMatch(t, w) {
+      if (!w) return true;
+      if (w === 'ask') return askPending(t) && isAskTarget(t);
+      var since = reviewSince(t); if (!since) return false;
+      var d = bizDays(new Date(since).getTime());
+      return w === 'late' ? d > reviewSlaMax() : d > reviewSla();
+    }
     var NEW_HOURS = 72;
     /** งานที่สร้าง/มอบหมายภายใน 3 วัน */
     /** เวลามอบหมายล่าสุด = เวลาที่เปลี่ยนผู้รับผิดชอบครั้งล่าสุด (ถ้ามี) หรือเวลาสร้างงาน */
@@ -857,7 +874,7 @@
       return {
         dashboard: { tab: 'overall', person: '', team: '', status: OPEN_FILTER },
         mine: freshListFilter(), assigned: freshListFilter(), all: freshListFilter(),
-        review: { q: '' },
+        review: { q: '', sort: 'wait', wait: '' },
         toassign: { q: '' },
         report: { assigner: '', team: '' }
       };
@@ -938,6 +955,20 @@
     }
     function icon(id) { return '<svg class="icon" aria-hidden="true"><use href="#i-' + id + '"/></svg>'; }
     function isSafeUrl(u) { return /^https?:\/\/[^\s<>"']+$/i.test(String(u || '')); }
+    /** ลิงก์หลายลิงก์ในช่องเดียว (บรรทัดละ 1 ลิงก์) */
+    function splitLinks(v) { return String(v || '').split(/\s+/).filter(Boolean); }
+    function hasLinks(v) { return splitLinks(v).some(isSafeUrl); }
+    function linksError(v, label) {
+      var list = splitLinks(v);
+      for (var i = 0; i < list.length; i++) if (!isSafeUrl(list[i])) return label + (list.length > 1 ? ' ลิงก์ที่ ' + (i + 1) : '') + ' ต้องขึ้นต้นด้วย https:// หรือ http://';
+      if (list.length > 10) return label + 'ใส่ได้ไม่เกิน 10 ลิงก์';
+      return '';
+    }
+    function linksHtml(v) { return splitLinks(v).filter(isSafeUrl).map(linkHtml).join('<br>'); }
+    function linksField(id, label, value, extra) {
+      return '<label for="' + id + '">' + label + ' <span class="hint">(หลายลิงก์ได้ · บรรทัดละ 1 ลิงก์)</span></label>' +
+        '<textarea class="textarea" id="' + id + '" rows="2" inputmode="url" style="min-height:58px" placeholder="https://…&#10;https://…"' + (extra || '') + '>' + esc(value || '') + '</textarea>';
+    }
     function linkHtml(u) { return isSafeUrl(u) ? '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + icon('link') + ' ' + esc(u) + '</a>' : esc(u); }
     function uuid() {
       if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -948,9 +979,9 @@
     function me() { return state.boot.user; }
     function role() { return state.boot ? state.boot.user.role : ''; }
     function isAdmin() { return role() === 'admin'; }
-    function isManager() { return role() === 'admin' || role() === 'head' || role() === 'executive'; }
+    function isManager() { return role() === 'admin' || role() === 'head' || role() === 'executive' || role() === 'assistant'; }
     /** ผู้ดูแลระบบและผู้บริหาร เห็นงานทุกทีม */
-    function seesAll() { return role() === 'admin' || role() === 'executive'; }
+    function seesAll() { return role() === 'admin' || role() === 'executive' || role() === 'assistant'; }
     function myDepts() { return (state.boot && state.boot.user.depts) || []; }
     function shareDept(list) { var mine = myDepts(); return (list || []).some(function (d) { return mine.indexOf(d) > -1; }); }
     /** หัวหน้าฝ่าย (ที่ระบุทีมแล้ว): รายงานผลงาน และรายการงานทั้งหมด แสดงเฉพาะงานของทีมตัวเอง */
@@ -959,6 +990,17 @@
     function isMyTeamPerson(name) { return shareDept(personDepts(name)); }
     /** งานของทีม = ทีมที่รับงานเป็นทีมเรา หรือมีผู้รับผิดชอบเป็นคนในทีมเรา */
     function isMyTeamTask(t) { return (!!t.team && myDepts().indexOf(t.team) > -1) || (t.owners || []).some(isMyTeamPerson); }
+    /** งานที่ตัวเองเกี่ยวข้องโดยตรง: ผู้รับผิดชอบ ผู้มอบหมาย ผู้ตรวจ หรือผู้ตรวจแทน */
+    function allListSub() {
+      if (seesAll()) return 'ค้นหาและกรองงานทุกทีมในระบบ';
+      if (headScoped()) return 'งานของคุณ และงานของลูกทีม ' + myDepts().join(', ');
+      return 'งานที่คุณรับผิดชอบ มอบหมาย หรือเป็นผู้ตรวจ';
+    }
+    function isPrivateTask(t) { return t.private === 'ใช่'; }
+    function privateTag() { return '<span class="tag-private" title="เห็นเฉพาะผู้มอบหมาย ผู้รับผิดชอบ ผู้ตรวจ และผู้ดูแลระบบ">' + icon('lock') + 'งานส่วนตัว</span>'; }
+    function involvesMe(t) { var i = (t.perms && t.perms.involvement) || {}; return !!(i.owner || i.assigner || i.reviewer || i.delegate); }
+    /** รายการงานทั้งหมด: ผู้บริหาร/ผู้ดูแลระบบ = ทุกงาน · หัวหน้าฝ่าย = งานของตัวเอง + งานของลูกทีม · พนักงาน = งานของตัวเอง */
+    function allListScope(t) { return seesAll() || involvesMe(t) || (headScoped() && isMyTeamTask(t)); }
     function findTask(id) { return state.tasks.filter(function (x) { return x.id === id; })[0] || null; }
     function setTask(t) {
       var i = state.tasks.map(function (x) { return x.id; }).indexOf(t.id);
@@ -1084,6 +1126,10 @@
         if (ca !== cb) return ca - cb;
         if (ca === 1) return (b.approvedAt || b.dueDate || '') < (a.approvedAt || a.dueDate || '') ? -1 : 1;
         var mode = (state.filters[state.view] && state.filters[state.view].sort) || 'due';
+        if (state.view === 'review' && (mode === 'wait' || mode === 'sent')) {
+          var wa = reviewSince(a), wb = reviewSince(b);
+          if (wa !== wb) { if (!wa) return 1; if (!wb) return -1; return (wa < wb ? -1 : 1) * (mode === 'wait' ? 1 : -1); }
+        }
         if (mode === 'new' && assignedAt(a) !== assignedAt(b)) return assignedAt(a) < assignedAt(b) ? 1 : -1;
         if (mode === 'update') { var ua = updatedAt(a), ub = updatedAt(b); if (ua !== ub) return ua < ub ? 1 : -1; }
         if (mode === 'due' && state.view === 'mine') {                 // งานของฉัน: งานที่ต้องแก้ไขขึ้นก่อน
@@ -1209,14 +1255,19 @@
     /* ---------------- รายชื่อสำหรับตัวกรอง ---------------- */
     function uniq(list) { var o = []; list.forEach(function (v) { if (v && o.indexOf(v) === -1) o.push(v); }); return o; }
     /** คนที่ใช้ในตัวกรอง: ผู้ดูแลระบบเห็นทุกคน · หัวหน้าเห็นคนในทีม · ทุกคน + คนที่ปรากฏในงานที่เห็นได้ */
-    function filterPeople() {
+    function filterPeople(teamOnly) {
+      if (teamOnly && headScoped()) return uniq(state.boot.people.filter(function (p) { return shareDept(p.depts); }).map(function (p) { return p.name; }));   // หัวหน้าฝ่าย: เฉพาะลูกทีม
       var base = state.boot.people
         .filter(function (p) { return seesAll() || (role() === 'head' && shareDept(p.depts)); })
         .map(function (p) { return p.name; });
       state.tasks.forEach(function (t) { (t.owners || []).forEach(function (n) { base.push(n); }); });
       return uniq(base);
     }
-    function filterAssigners() { return uniq(state.tasks.map(function (t) { return t.assigner; })); }
+    function filterAssigners(teamOnly) {
+      var list = state.tasks.filter(function (t) { return state.view === 'all' ? allListScope(t) : true; }).map(function (t) { return t.assigner; });
+      if (teamOnly && headScoped()) list = list.filter(isMyTeamPerson);        // หัวหน้าฝ่าย (รายงานผลงาน): เฉพาะคนในทีม
+      return uniq(list);
+    }
     function visibleTeams() {
       var teams = state.boot.teams.slice();
       if (seesAll()) return teams;
@@ -1355,6 +1406,7 @@
       var tags = myRoleTags(t).map(function (p) { return '<span class="tag-mini">' + esc(p) + '</span>'; });
       if (t.status === REVISE) tags.unshift('<span class="tag-mini warn">ต้องแก้ไข' + (t.submitRound ? ' (รอบ ' + t.submitRound + ')' : '') + '</span>');
       if (t.sla) tags.push(slaTag(t.sla));
+      if (isPrivateTask(t)) tags.unshift(privateTag());
       if (isNewTask(t)) tags.unshift('<span class="tag-new" title="มอบหมายเมื่อ ' + esc(timeAgo(assignedAt(t))) + '">ใหม่</span>');
       var inv0 = t.perms && t.perms.involvement;
       if (askPending(t) && isAskTarget(t)) tags.unshift('<span class="tag-ask">' + icon('chat') + 'ขอความเห็น</span>');
@@ -1428,7 +1480,7 @@
       if (view === 'assigned') return periodTasks().filter(function (t) { return t.perms.involvement.assigner; });
       if (view === 'review') return reviewInbox();
       if (view === 'toassign') return assignQueue();
-      return headScoped() ? periodTasks().filter(isMyTeamTask) : periodTasks();
+      return periodTasks().filter(allListScope);
     }
     function applyListFilter(list, f) {
       var q = (f.q || '').toLowerCase();
@@ -1464,7 +1516,7 @@
         return;
       }
 
-      var people = filterPeople(), teams = dashboardTeams();
+      var people = filterPeople(true), teams = dashboardTeams();
       if (f.tab === 'person' && people.indexOf(f.person) === -1) f.person = people[0] || '';
       if (f.tab === 'team' && teams.indexOf(f.team) === -1) f.team = teams[0] || '';
 
@@ -1625,7 +1677,7 @@
     }
     function memberBreakdown(team, list) {
       var names = state.boot.people.filter(function (p) { return (p.depts || []).indexOf(team) > -1; }).map(function (p) { return p.name; });
-      list.forEach(function (t) { if (t.team === team) (t.owners || []).forEach(function (n) { names.push(n); }); });
+      if (!headScoped()) list.forEach(function (t) { if (t.team === team) (t.owners || []).forEach(function (n) { names.push(n); }); });   // หัวหน้าฝ่าย: เฉพาะคนในทีม
       var rows = uniq(names).map(function (n) {
         return countRow(personHtml(n), list.filter(function (t) { return (t.owners || []).indexOf(n) > -1; }));
       }).join('');
@@ -1637,7 +1689,7 @@
     /* ---------------- หน้ารายการงาน (งานของฉัน / ที่ฉันมอบหมาย / ทั้งหมด) ---------------- */
     function renderList() {
       var v = state.view, f = state.filters[v], base = baseList(v);
-      var teams = visibleTeams(), people = filterPeople(), assigners = filterAssigners();
+      var teams = visibleTeams(), people = filterPeople(v === 'all'), assigners = filterAssigners();
       var html = '';
       if (v === 'mine' && myRevisions().length) {
         html += '<div class="callout callout-warn"><div class="callout-title">' + icon('alert') + 'มีงานที่ผู้ตรวจขอแก้ไข ' + myRevisions().length + ' งาน</div>' +
@@ -1761,7 +1813,7 @@
     }
     function reportScope() {
       var f = state.filters.report;
-      return state.tasks.filter(function (t) {
+      return state.tasks.concat(role() !== 'employee' && state.boot && state.boot.maskedTasks || []).filter(function (t) {   // งานส่วนตัวแบบตัวเลขล้วน: ผู้บริหาร/หัวหน้าฝ่าย
         if (headScoped() && !isMyTeamTask(t)) return false;       // หัวหน้าฝ่าย: เฉพาะงานของทีมตัวเอง
         if (f.assigner && t.assigner !== f.assigner) return false;
         if (f.team && (t.depts || []).indexOf(f.team) === -1) return false;
@@ -1772,8 +1824,8 @@
       var f = state.filters.report || (state.filters.report = { assigner: '', team: '' });
       var html = periodBar() +
         '<div class="filters cols-3" role="search">' +
-          '<div class="field"><label for="rpAssigner">ผู้มอบหมาย</label><select class="select" id="rpAssigner">' + options(filterAssigners(), f.assigner, 'ทุกคน') + '</select>' +
-            '<span class="hint">เช่น เลือก CEO เพื่อดูเฉพาะงานที่ CEO สั่ง</span></div>' +
+          '<div class="field"><label for="rpAssigner">ผู้มอบหมาย</label><select class="select" id="rpAssigner">' + options(filterAssigners(true), f.assigner, 'ทุกคน') + '</select>' +
+            '<span class="hint">' + (headScoped() ? 'เลือกลูกทีมเพื่อดูเฉพาะงานที่คนนั้นสั่ง' : 'เช่น เลือก CEO เพื่อดูเฉพาะงานที่ CEO สั่ง') + '</span></div>' +
           '<div class="field"><label for="rpTeam">ทีม</label><select class="select" id="rpTeam">' + options(visibleTeams(), f.team, 'ทุกทีม') + '</select></div>' +
           '<div class="actions"><button class="btn" type="button" id="rpReset">ล้างตัวกรอง</button></div>' +
         '</div><div id="results"></div>';
@@ -1789,6 +1841,7 @@
       var scope = reportScope(), list = scope.filter(inPeriod);
       var s = perfStats(list);
       var rvRows = reviewerStats(list);
+      if (role() === 'head') rvRows = [];     // หัวหน้าฝ่าย: ไม่แสดงความเร็วผู้ตรวจในหน้ารายงาน
       var rvAll = rvRows.reduce(function (a, x) { a.count += x.count; a.days += x.days; a.slow += x.slow; a.pending += x.pending; return a; }, { count: 0, days: 0, slow: 0, pending: 0 });
       rvAll.avg = rvAll.count ? Math.round(rvAll.days / rvAll.count * 10) / 10 : null;
       var dash = function (v, suf) { return v === null ? '<span class="muted">—</span>' : v + (suf || ''); };
@@ -1800,7 +1853,8 @@
         ['ผ่านรอบแรก', s.pctFirstPass === null ? '—' : s.pctFirstPass + '%', 'purple', 'checklist', 'เฉลี่ย ' + (s.avgRounds === null ? '—' : s.avgRounds) + ' รอบจนเสร็จ · มากสุด ' + s.maxRounds + ' รอบ'],
         ['ตรวจเฉลี่ย', rvAll.avg === null ? '—' : rvAll.avg, 'orange', 'review', 'วันทำการต่อครั้ง · เกิน ' + reviewSlaMax() + ' วัน ' + rvAll.slow + ' ครั้ง · รอตรวจ ' + rvAll.pending]
       ];
-      var html = '<div class="summary six">' + cards.map(function (c) {
+      if (role() === 'head') cards.pop();     // หัวหน้าฝ่าย: ไม่แสดงการ์ดตรวจเฉลี่ย
+      var html = '<div class="summary' + (cards.length === 5 ? '' : ' six') + '">' + cards.map(function (c) {
         return '<div class="stat tone-' + c[2] + '"><div class="stat-top"><span class="stat-label">' + c[0] + '</span><span class="stat-icon">' + icon(c[3]) + '</span></div>' +
           '<div class="stat-value" data-rep="' + c[3] + '">' + c[1] + '</div><div class="stat-note">' + esc(c[4]) + '</div></div>';
       }).join('') + '</div>';
@@ -1814,7 +1868,8 @@
         var ps = perfStats(list.filter(function (t) { return (t.owners || []).indexOf(n) > -1; }));
         ps.name = n; return ps;
       }).sort(function (a, b) { return b.received - a.received || a.name.localeCompare(b.name, 'th'); });
-      var unassigned = list.filter(function (t) { return isUnassigned(t) && !isFinal(t); }).length;
+      var unassigned = list.filter(function (t) { return isUnassigned(t) && !isFinal(t) && !t.masked; }).length;
+      var nMasked = list.filter(function (t) { return t.masked; }).length;
       html += '<section class="panel breakdown"><div class="panel-head"><h2 class="panel-title">ผลงานรายคน</h2><span class="count">กดชื่อเพื่อดูรายการงาน</span></div>' +
         '<div class="table-wrap"><table class="task-table"><thead><tr><th>ผู้รับผิดชอบ</th><th class="num">ได้รับ</th><th class="num">เสร็จ</th>' +
         '<th class="num">ทัน SLA</th><th class="num">เกิน SLA</th><th class="num">เกินกำหนดส่ง</th><th class="num">ยังไม่เสร็จ</th><th class="num">เกินกำหนด (ยังไม่ส่ง)</th><th class="num">ยกเลิก</th>' +
@@ -1832,7 +1887,8 @@
             '<td class="num" data-label="ขอแก้ไขเฉลี่ย">' + dash(r.avgRev) + '</td></tr>';
         }).join('') : '<tr><td colspan="12"><div class="empty">' + icon('inbox') + '<div>ไม่มีงานในช่วงเวลานี้</div></div></td></tr>') +
         '</tbody></table></div>' +
-        (unassigned ? '<div class="hint" style="padding:10px 18px">มีงานที่ยังไม่ระบุผู้รับผิดชอบ ' + unassigned + ' งาน (ไม่อยู่ในตารางรายคน)</div>' : '') + '</section>';
+        (unassigned ? '<div class="hint" style="padding:10px 18px">มีงานที่ยังไม่ระบุผู้รับผิดชอบ ' + unassigned + ' งาน (ไม่อยู่ในตารางรายคน)</div>' : '') +
+        (nMasked ? '<div class="hint" style="padding:10px 18px">' + icon('lock') + ' ตัวเลขรวมงานส่วนตัวของผู้บริหาร ' + nMasked + ' งาน (นับในสถิติ แต่เปิดดูรายละเอียดไม่ได้)</div>' : '') + '</section>';
 
       // สถิติการแก้ไขงาน (รายคน · ตามผู้มอบหมายที่เลือกด้านบน)
       var revRows = rows.filter(function (r) { return r.done || r.fixN; });
@@ -1883,7 +1939,7 @@
             '<td class="num" data-label="ทัน SLA">' + x.ontime + '</td><td class="num" data-label="เกิน SLA">' + x.slaOver + '</td><td class="num" data-label="เกินกำหนดส่ง">' + x.late + '</td></tr>';
         }).join('') + '</tbody></table></div></section>' +
         '<p class="summary-caption">ได้รับ = งานที่เป็นผู้รับผิดชอบ (งานที่มีผู้รับผิดชอบหลายคนนับให้ทุกคน) · เสร็จ = ผู้ตรวจรับงานแล้ว · ทัน SLA = <b>ส่งตรวจครั้งแรก</b>ไม่เกินเวลาส่งตาม SLA ของวัน Deadline · เกิน SLA = ส่งในวัน Deadline แต่หลังเวลา SLA · เกินกำหนดส่ง = ส่งหลังวัน Deadline (ผู้ตรวจรับช้าไม่ทำให้ผู้รับผิดชอบล่าช้า · งานที่ไม่ระบุเวลา SLA นับถึงสิ้นวัน) · ' +
-        'ผ่านรอบแรก = ตรวจรับโดยไม่ถูกขอแก้ไข · ใช้เวลาแก้ = วันทำการตั้งแต่ถูกขอแก้ไขจนส่งใหม่ · ความเร็วผู้ตรวจ = วันทำการตั้งแต่ส่งตรวจจนรับงาน/ขอแก้ไข · ' +
+        'ผ่านรอบแรก = ตรวจรับโดยไม่ถูกขอแก้ไข · ใช้เวลาแก้ = วันทำการตั้งแต่ถูกขอแก้ไขจนส่งใหม่ · ' + (role() === 'head' ? '' : 'ความเร็วผู้ตรวจ = วันทำการตั้งแต่ส่งตรวจจนเสร็จสิ้น/ขอแก้ไข · ') +
         'งานที่ยกเลิกไม่นับใน % · งานเก่าจาก Notion ใช้วันที่เริ่มแทนวันที่มอบหมาย และใช้วันที่แก้ไขล่าสุดแทนวันที่ตรวจรับ</p>';
       $('#results').innerHTML = html;
       $$('.rep-row').forEach(function (tr) {
@@ -1902,17 +1958,24 @@
       var f = state.filters.review;
       var html = '<div class="filters cols-2" role="search"><div class="field search-field"><label for="rQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
         '<input class="input" id="rQ" type="search" placeholder="ชื่องาน หรือเลขที่งาน…" value="' + esc(f.q) + '" autocomplete="off"></div></div>' +
-        '<div class="field"><span class="field-label">วิธีตรวจ</span><div class="hint" style="padding-top:8px">กด "ตรวจงาน" เพื่อดูโจทย์ ผลงาน และประวัติ แล้วเลือก รับงาน หรือ ขอแก้ไข</div></div></div>' +
+        '<div class="field"><span class="field-label">วิธีตรวจ</span><div class="hint" style="padding-top:8px">กด "ตรวจงาน" เพื่อดูโจทย์ ผลงาน และประวัติ แล้วเลือก เสร็จสิ้น หรือ ขอแก้ไข</div></div></div>' +
+        '<div class="filters cols-2" style="margin-top:-6px"><div class="field"><label for="rSort">เรียงตาม</label><select class="select" id="rSort">' +
+          REVIEW_SORTS.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === f.sort ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label for="rWait">ระยะเวลารอตรวจ</label><select class="select" id="rWait">' +
+          REVIEW_WAITS.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === f.wait ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</select></div></div>' +
         '<div id="results"></div>';
       var rf = myReviewFor();
       if (rf.length) html = '<div class="notice notice-info" style="margin-bottom:14px">คุณเป็น<strong>ผู้ตรวจงานแทน ' + esc(rf.join(', ')) +
         '</strong> — งานที่ ' + esc(rf.join(', ')) + ' เป็นผู้ตรวจจะอยู่ในรายการนี้ด้วย และคุณรับงานหรือขอแก้ไขแทนได้ (ประวัติจะบันทึกว่า "ตรวจแทน")</div>' + html;
       $('#content').innerHTML = banner() + html;
       $('#rQ').addEventListener('input', function () { f.q = this.value; renderReviewResults(); });
+      $('#rSort').addEventListener('change', function () { f.sort = this.value; renderReviewResults(); });
+      $('#rWait').addEventListener('change', function () { f.wait = this.value; renderReviewResults(); });
       renderReviewResults();
     }
     function renderReviewResults() {
-      var list = applyListFilter(reviewInbox(), { q: state.filters.review.q, status: '' });
+      var rfl = state.filters.review;
+      var list = applyListFilter(reviewInbox(), { q: rfl.q, status: '' }).filter(function (t) { return reviewWaitMatch(t, rfl.wait); });
       var nAsk = list.filter(function (t) { return askPending(t) && isAskTarget(t); }).length;
       var cols = myReviewFor().length ? ['title', 'submitted', 'reviewer', 'main', 'due', 'action'] : ['title', 'submitted', 'main', 'priority', 'due', 'action'];
       var sum = nAsk ? '<div class="review-sum"><span class="hint">แถวสีฟ้า = ผู้รับผิดชอบขอความเห็น (ยังไม่ใช่งานส่งตรวจ) · กด "ตอบกลับ" แล้วพิมพ์คำตอบ รายการจะหายไปเอง</span></div>' : '';
@@ -1977,7 +2040,7 @@
       });
       $('#newTaskBtn').hidden = v !== 'mine';     // ปุ่มสร้างงานด้านบน: เฉพาะหน้างานของฉัน (แถบซ้ายมีตลอด)
       $('#pageTitle').textContent = VIEWS[v].title;
-      $('#pageSub').textContent = VIEWS[v].sub;
+      $('#pageSub').textContent = v === 'all' ? allListSub() : VIEWS[v].sub;
       closeNav();
       renderView();
       window.scrollTo(0, 0);
@@ -2065,7 +2128,7 @@
         html += '<div class="callout callout-review"><div class="callout-title">' + icon('review') + 'ส่งตรวจรอบที่ ' + (t.submitRound || 1) +
           '<span class="callout-meta">โดย ' + esc(t.submittedBy) + ' · ' + esc(thaiDateTime(t.submittedAt)) + ' · รอ ' + esc(t.reviewer || 'ผู้ดูแลระบบ') + ' ตรวจ</span></div>' +
           '<div class="callout-body">' + esc(t.submitNote) + '</div>' +
-          (isSafeUrl(t.workLink) ? '<div style="margin-top:6px">ผลงาน: ' + linkHtml(t.workLink) + '</div>' : '') + '</div>';
+          (hasLinks(t.workLink) ? '<div style="margin-top:6px">ผลงาน: ' + linksHtml(t.workLink) + '</div>' : '') + '</div>';
       }
       if (t.status === CLOSED && t.approvedBy) {
         html += '<div class="callout callout-done"><div class="callout-title">' + icon('check') + 'ตรวจรับแล้ว' +
@@ -2144,7 +2207,7 @@
       var updateSection = '<h3 class="section-title" id="updateSec">' + (replyFirst ? 'ตอบกลับ' : 'อัปเดตความคืบหน้า / ความคิดเห็น') + '</h3>' + updateFormHtml(t);
       var edited = t.lastEdited ? thaiDateTime(t.lastEdited) + (t.editedBy ? ' · ' + t.editedBy : '') : '—';
       var body =
-        '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + pill(t.status) + prioHtml(t.priority) +
+        '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + pill(t.status) + prioHtml(t.priority) + (isPrivateTask(t) ? privateTag() : '') +
           (t.sla ? slaTag(t.sla) : '') +
           myRoleTags(t).map(function (x) { return '<span class="team-chip">' + esc(x) + '</span>'; }).join('') + '</div>' +
         statusCallouts(t) +
@@ -2163,7 +2226,7 @@
         '</div>' +
         '<h3 class="section-title">โจทย์ / รายละเอียดงาน</h3><div class="detail-text">' + (t.detail ? esc(t.detail) : '<span class="muted">ไม่มีรายละเอียดเพิ่มเติม</span>') + '</div>' +
         (t.note ? '<h3 class="section-title">หมายเหตุ</h3><div class="detail-text">' + esc(t.note) + '</div>' : '') +
-        '<div class="link-row"><h3 class="section-title" style="margin:0">ลิงก์ผลงาน</h3>' + (isSafeUrl(t.workLink) ? linkHtml(t.workLink) : '<span class="muted">ยังไม่มีลิงก์ผลงาน</span>') + '</div>' +
+        '<div class="link-row"><h3 class="section-title" style="margin:0">ลิงก์ผลงาน</h3>' + (hasLinks(t.workLink) ? splitLinks(t.workLink).filter(isSafeUrl).map(linkHtml).join('') : '<span class="muted">ยังไม่มีลิงก์ผลงาน</span>') + '</div>' +
         (replyFirst ? updateSection : '') +
         reviewBox(t) + submitBox(t) + editBox(t) +
         (replyFirst ? '' : updateSection) +
@@ -2181,12 +2244,14 @@
       if (!t.perms.canReview) return '';
       return '<div class="action-box review"><h3 class="action-title">ตรวจงาน (รอบที่ ' + (t.submitRound || 1) + ')' +
         (t.perms.involvement.delegate ? ' · ตรวจแทน ' + esc(t.reviewer) : '') + '</h3>' +
-        '<div class="hint">ดูโจทย์ ผลงาน และประวัติด้านล่างก่อนตัดสินใจ · เลือก "รับงาน" เพื่อปิดงาน หรือ "ขอแก้ไข" เพื่อส่งกลับให้ผู้รับผิดชอบ</div>' +
+        '<div class="hint">ดูโจทย์ ผลงาน และประวัติด้านล่างก่อนตัดสินใจ · เลือก "เสร็จสิ้น" เพื่อปิดงาน หรือ "ขอแก้ไข" เพื่อส่งกลับให้ผู้รับผิดชอบ' +
+        (t.perms.canCancel ? ' · ถ้างานนี้ไม่ต้องทำต่อแล้ว (เช่น เปลี่ยนแผน) กด "ยกเลิกงาน" และระบุเหตุผล' : '') + '</div>' +
         '<div class="field"><label for="rvText">ความเห็นของผู้ตรวจ / สิ่งที่ต้องแก้ไข <span class="hint">(บังคับกรอกเมื่อขอแก้ไข)</span></label>' +
         '<textarea class="textarea" id="rvText" maxlength="2000" style="min-height:80px"></textarea></div>' +
         '<div id="rvError"></div>' +
-        '<div class="action-row"><button class="btn btn-revise" type="button" id="rvRevise">ขอแก้ไข</button>' +
-        '<button class="btn btn-approve" type="button" id="rvApprove">' + icon('check') + 'รับงาน / เสร็จสิ้น</button></div></div>';
+        '<div class="action-row">' + (t.perms.canCancel ? '<button class="btn btn-danger-outline" type="button" id="rvCancel">' + icon('x') + 'ยกเลิกงาน</button><span class="spacer"></span>' : '') +
+        '<button class="btn btn-revise" type="button" id="rvRevise">ขอแก้ไข</button>' +
+        '<button class="btn btn-approve" type="button" id="rvApprove">' + icon('check') + 'เสร็จสิ้น</button></div></div>';
     }
 
     function submitBox(t) {
@@ -2197,7 +2262,7 @@
       }
       return '<div class="action-box"><h3 class="action-title">' + (t.status === REVISE ? 'แก้ไขแล้ว ส่งตรวจรอบใหม่' : 'ส่งตรวจ') + ' <span class="hint">(ผู้ตรวจ: ' + esc(t.reviewer) + ')</span></h3>' +
         '<div class="field"><label for="sbSummary">สรุปสิ่งที่ทำ <span class="req">*</span></label><textarea class="textarea" id="sbSummary" maxlength="2000" style="min-height:80px" placeholder="ทำอะไรไปแล้วบ้าง ผลลัพธ์คืออะไร' + (t.status === REVISE ? ' และแก้ไขตามที่ผู้ตรวจขออย่างไร' : '') + '"></textarea></div>' +
-        '<div class="field"><label for="sbLink">ลิงก์ผลงาน / หลักฐาน</label><input class="input" id="sbLink" type="url" inputmode="url" placeholder="https://…" value="' + esc(t.workLink || '') + '">' +
+        '<div class="field">' + linksField('sbLink', 'ลิงก์ผลงาน / หลักฐาน', t.workLink) +
         '<span class="hint">แนบตามลักษณะงาน เช่น ไฟล์ Google Drive, เอกสาร, ภาพหน้าจอ</span></div>' +
         (progressOf(t) === 100 ? '' : '<div class="callout callout-orange" id="sbFullBox" style="margin-bottom:12px"><div class="callout-title">' + icon('alert') + 'ความคืบหน้ายังไม่ครบ 100%</div>' +
           '<div class="callout-body">ตอนนี้ความคืบหน้าอยู่ที่ <b>' + (progressOf(t) == null ? 'ยังไม่ได้อัปเดต' : progressOf(t) + '%') + '</b> แต่การส่งตรวจหมายถึงงานเสร็จครบแล้ว' +
@@ -2221,6 +2286,8 @@
         '<span class="hint" id="uHint">' + esc(WORKFLOW_HINT[t.status] || 'ส่งตรวจ / ขอแก้ไข / รับงาน ใช้ปุ่มด้านบน') + '</span></div>';
       html += '<div class="field"><label for="uPriority">ความสำคัญ</label><select class="select" id="uPriority"' + dis(p.canEditPriority) + '><option value="">ไม่ระบุ</option>' + options(state.boot.priorities, t.priority) + '</select></div>';
       html += slaTimeFieldHtml('u', t.slaType || '', t.slaTime || '', !p.canEditPriority);
+      if (p.canSetPrivate) html += '<div class="field full"><label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="uPrivate" style="margin-top:4px"' + (isPrivateTask(t) ? ' checked' : '') + '>' +
+        '<span>' + icon('lock') + ' <strong>งานส่วนตัว</strong> <span class="hint">— เห็นเฉพาะคุณ ผู้รับผิดชอบ ผู้ตรวจ และผู้ดูแลระบบ</span></span></label></div>';
       if (p.canEditTeam) html += '<div class="field"><label for="uTeam">ทีมที่รับงาน</label><select class="select" id="uTeam">' + options(state.boot.teams, t.team, '— ไม่ระบุทีม —') + '</select></div>';
       if (p.canSetReviewer) html += '<div class="field"><label for="uReviewer">ผู้ตรวจงาน</label><select class="select" id="uReviewer">' + reviewerOptions(t.reviewer, t.owners) + '</select>' +
         '<span class="hint">ต้องไม่ใช่ผู้รับผิดชอบงานนี้' + (isAdmin() ? '' : ' · ระบุได้ครั้งเดียว แล้วจะล็อกไว้') + '</span></div>';
@@ -2235,7 +2302,7 @@
       }
       html += '<div class="field full"><label for="uProblem">ปัญหา / Error</label><textarea class="textarea" id="uProblem" maxlength="1000" style="min-height:60px"' + dis(p.canEditNotes) + '>' + esc(t.problem) + '</textarea></div>' +
         '<div class="field full"><label for="uNote">หมายเหตุ</label><textarea class="textarea" id="uNote" maxlength="2000" style="min-height:60px"' + dis(p.canEditNotes) + '>' + esc(t.note) + '</textarea></div>' +
-        '<div class="field full"><label for="uLink">ลิงก์ผลงาน</label><input class="input" id="uLink" type="url" inputmode="url" placeholder="https://…" value="' + esc(t.workLink || '') + '"' + dis(p.canEditNotes) + '></div>' +
+        '<div class="field full">' + linksField('uLink', 'ลิงก์ผลงาน', t.workLink, dis(p.canEditNotes)) + '</div>' +
         '<div class="field full" id="uError"></div>' +
         '</div><div class="action-row"><button class="btn btn-primary" type="button" id="uSave" disabled>บันทึกการแก้ไข</button></div></div></details>';
       return html;
@@ -2277,7 +2344,7 @@
       html += '<div class="field"><label for="cmText" id="cmTextLabel">' + (ownerReply ? 'ตอบกลับผู้ตรวจ <span class="req">*</span>' : owner ? 'ทำถึงไหนแล้ว ติดอะไรอยู่ <span class="req">*</span>' : answering ? 'ตอบกลับผู้รับผิดชอบ <span class="req">*</span>' : 'ความคิดเห็นถึงผู้รับผิดชอบ <span class="req">*</span>') + '</label>' +
           '<textarea class="textarea" id="cmText" maxlength="2000" style="min-height:70px" placeholder="' + (ownerReply ? 'เช่น เพิ่มแบบที่ขอในไฟล์แล้วค่ะ / ตอบคำถามของผู้ตรวจ' : owner ? 'เช่น ร่างเสร็จแล้ว รอข้อมูลจากฝ่ายขาย' : 'เช่น ขอเพิ่มตารางสรุปท้ายรายงาน') + '"></textarea>' +
           '<span class="hint" id="cmHint">' + (ownerReply ? 'ส่งแล้วงานจะกลับไปที่ ' + esc(t.reviewer || t.assigner || 'ผู้ตรวจ') + ' พร้อมป้าย "ผู้รับผิดชอบตอบกลับแล้ว"' : owner ? '⚠ แค่บันทึกความคืบหน้า — ไม่แจ้งเตือนผู้ตรวจ ถ้าต้องการคำตอบ ให้เลือก "ขอความเห็นผู้ตรวจ"' : 'ผู้รับผิดชอบ (' + esc((t.owners || []).join(', ') || '—') + ') จะเห็นป้าย "มีอัปเดตใหม่"') + '</span></div>' +
-        '<div class="field"><label for="cmLink">แนบลิงก์เอกสาร (ถ้ามี)</label><input class="input" id="cmLink" type="url" inputmode="url" placeholder="https://…"></div>' +
+        '<div class="field">' + linksField('cmLink', 'แนบลิงก์เอกสาร (ถ้ามี)', '') + '</div>' +
         '<div id="cmError"></div>' +
         '<div class="action-row"><button class="btn btn-primary" type="button" id="cmSend">' + icon('chat') + (ownerReply ? 'ส่งตอบกลับผู้ตรวจ' : owner ? 'บันทึกความคืบหน้า' : answering ? 'ส่งตอบกลับ' : 'ส่งความคิดเห็น') + '</button></div>' +
         '</div>';
@@ -2317,7 +2384,7 @@
           showError('#cmError', kind === 'reply' ? 'กรุณาพิมพ์ข้อความตอบกลับ' : kind === 'ask' ? 'กรุณาพิมพ์สิ่งที่ต้องการขอความเห็น' : kind === 'progress' ? 'กรุณาพิมพ์ว่าทำถึงไหนแล้ว ติดอะไรอยู่' : 'กรุณาพิมพ์ความคิดเห็น');
           $('#cmText').setAttribute('aria-invalid', 'true'); $('#cmText').focus(); return;
         }
-        if (link && !isSafeUrl(link)) { showError('#cmError', 'ลิงก์ต้องขึ้นต้นด้วย https:// หรือ http://'); return; }
+        if (linksError(link, 'ลิงก์')) { showError('#cmError', linksError(link, 'ลิงก์')); return; }
         runAction(this, 'กำลังบันทึก…', '#cmError', function () {
           return callAuthed('addComment', t.id, data);
         }, function (res) {
@@ -2342,6 +2409,7 @@
         };
         $('#rvApprove').addEventListener('click', function () { review('approve', this); });
         $('#rvRevise').addEventListener('click', function () { review('revise', this); });
+        if ($('#rvCancel')) $('#rvCancel').addEventListener('click', function () { openCancel(t); });
       }
 
       // ส่งตรวจ
@@ -2350,7 +2418,7 @@
         $('#sbSend').addEventListener('click', function () {
           var summary = $('#sbSummary').value.trim(), link = $('#sbLink').value.trim();
           if (!summary) { showError('#sbError', 'กรุณาสรุปสิ่งที่ทำก่อนส่งตรวจ'); $('#sbSummary').focus(); return; }
-          if (link && !isSafeUrl(link)) { showError('#sbError', 'ลิงก์ผลงานต้องขึ้นต้นด้วย https:// หรือ http://'); return; }
+          if (linksError(link, 'ลิงก์ผลงาน')) { showError('#sbError', linksError(link, 'ลิงก์ผลงาน')); return; }
           var full = $('#sbFull');
           if (full && !full.checked) {
             showError('#sbError', 'ความคืบหน้ายังไม่ครบ 100% ซึ่งไม่สัมพันธ์กับการส่งตรวจ — ถ้างานเสร็จแล้วให้ติ๊ก "งานเสร็จครบแล้ว" ก่อนกดส่งตรวจ');
@@ -2374,6 +2442,7 @@
         var c = {};
         if (val('uStatus') !== null && val('uStatus') !== t.status) c.status = val('uStatus');
         if (p.canEditPriority && val('uPriority') !== (t.priority || '')) c.priority = val('uPriority');
+        if ($('#uPrivate') && $('#uPrivate').checked !== isPrivateTask(t)) c.private = $('#uPrivate').checked;
         if (p.canEditPriority && $('#uSlaType')) {
           var stp = val('uSlaType'), stm = stp === SLA_CUSTOM ? val('uSlaTime') : (stp ? ({ 'ก่อน 12:00 น.': '12:00', 'ก่อน 17:00 น.': '17:00' })[stp] : '');
           if (stp !== (t.slaType || '') || stm !== (t.slaTime || '')) { c.slaType = stp; c.slaTime = stm; }
@@ -2389,7 +2458,7 @@
         if (p.canEditNotes) {
           if (val('uProblem') !== (t.problem || '')) c.problem = val('uProblem');
           if (val('uNote') !== (t.note || '')) c.note = val('uNote');
-          if (val('uLink') !== (t.workLink || '')) c.workLink = val('uLink');
+          if ($('#uLink') && splitLinks(val('uLink')).join('\n') !== splitLinks(t.workLink).join('\n')) c.workLink = splitLinks(val('uLink')).join('\n');
         }
         return c;
       };
@@ -2430,7 +2499,7 @@
       save.addEventListener('click', function () {
         var c = changes();
         if (!Object.keys(c).length) return;
-        if (c.workLink && !isSafeUrl(c.workLink)) { showError('#uError', 'ลิงก์ผลงานต้องขึ้นต้นด้วย https:// หรือ http://'); return; }
+        if (c.workLink && linksError(c.workLink, 'ลิงก์ผลงาน')) { showError('#uError', linksError(c.workLink, 'ลิงก์ผลงาน')); return; }
         if (c.slaType === SLA_CUSTOM && !/^\d{2}:\d{2}$/.test(c.slaTime || '')) { showError('#uError', 'กรุณาระบุเวลาส่งตาม SLA (เวลาเอง)'); $('#uSlaTime').setAttribute('aria-invalid', 'true'); $('#uSlaTime').focus(); return; }
         runAction(save, 'กำลังบันทึก…', '#uError', function () { return callAuthed('updateTask', t.id, c); },
           function (task) { after(task, 'บันทึกการแก้ไขแล้ว'); });
@@ -2478,7 +2547,7 @@
           return '<li class="tl-item"><span class="tl-dot ' + (HISTORY_DOT[h.type] || '') + '"></span>' +
             '<div class="tl-head"><strong>' + esc(h.type) + '</strong> · ' + esc(h.user) + ' · ' + esc(thaiDateTime(h.time)) + '</div>' +
             (h.detail ? '<div class="tl-body">' + esc(h.detail) + '</div>' : '') +
-            (isSafeUrl(h.link) ? '<div class="tl-link">' + linkHtml(h.link) + '</div>' : '') + '</li>';
+            (hasLinks(h.link) ? '<div class="tl-link">' + linksHtml(h.link) + '</div>' : '') + '</li>';
         }).join('') + '</ul>';
     }
 
@@ -2528,6 +2597,8 @@
           slaTimeFieldHtml('c', '', '') +
           '<div class="field"><label for="cStatus">สถานะเริ่มต้น</label><select class="select" id="cStatus">' + options(state.boot.createStatuses, 'ยังไม่เริ่ม') + '</select></div>' +
           '<div class="field full"><label for="cNote">หมายเหตุ</label><textarea class="textarea" id="cNote" maxlength="2000" style="min-height:60px"></textarea></div>' +
+          (role() === 'executive' ? '<div class="field full"><label class="check-line" style="display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="cPrivate" style="margin-top:4px">' +
+            '<span>' + icon('lock') + ' <strong>งานส่วนตัว</strong> <span class="hint">— เห็นเฉพาะคุณ ผู้รับผิดชอบ ผู้ตรวจ และผู้ดูแลระบบ (ผู้ตรวจงานแทน ผู้บริหารคนอื่น และหัวหน้าฝ่ายไม่เห็น)</span></span></label></div>' : '') +
           '<div class="field full"><span class="hint">ผู้มอบหมาย: <strong>' + esc(u.name) + '</strong> (บันทึกเป็นชื่อผู้ที่เข้าสู่ระบบอยู่)</span></div>' +
           '<div class="field full" id="cError"></div>' +
         '</div></form>';
@@ -2583,6 +2654,7 @@
           status: $('#cStatus').value,
           note: $('#cNote').value.trim()
         };
+        if ($('#cPrivate') && $('#cPrivate').checked) data.private = true;
         var errs = [];
         if (!data.title) errs.push('กรุณากรอกชื่องาน');
         if (!data.detail) errs.push('กรุณากรอกโจทย์ / รายละเอียด และผลลัพธ์ที่ต้องส่ง');
@@ -2758,6 +2830,7 @@
     /* ---------------- ตั้งค่าระบบ (ผู้ดูแลระบบ) ---------------- */
     var ROLE_HELP = [
       ['ผู้บริหาร', 'เห็นทุกงานทุกทีม Dashboard ทุกทีม และรายงานผลงานทั้งหมด · มอบหมายงานและตรวจรับงานที่ตัวเองเป็นผู้ตรวจ · ไม่มีหน้าตั้งค่าระบบ (เหมาะกับ CEO)'],
+      ['ผู้ช่วยผู้บริหาร', 'เห็นทุกงานทุกทีม Dashboard และรายงานผลงานทั้งหมด (ยกเว้นงานส่วนตัวของผู้บริหาร) เพื่อติดตามและทำรายงาน · แก้ไขงานได้เท่าพนักงาน · ตั้งงานส่วนตัวไม่ได้ · ตั้งให้ตรวจงานแทน CEO ได้'],
       ['ผู้ดูแลระบบ', 'เห็นทุกงานทุกทีม · แก้ไขข้อมูลงาน ระบุผู้รับผิดชอบและผู้ตรวจ · ตรวจรับงานแทนได้ (ยกเว้นงานที่ตัวเองรับผิดชอบ) · จัดการพนักงานและทีม'],
       ['หัวหน้าฝ่าย', 'เห็นงานที่เกี่ยวข้องกับทีมตัวเอง · ระบุผู้รับผิดชอบหลักของงานที่มอบให้ทีม · ตรวจรับงานได้เมื่อถูกระบุเป็นผู้ตรวจ · ต้องระบุทีมให้ ไม่อย่างนั้นจะเห็นเฉพาะงานของตัวเอง'],
       ['พนักงาน', 'เห็นงานที่ตัวเองรับผิดชอบ มอบหมาย หรือเป็นผู้ตรวจ · สร้างงานมอบให้คนอื่นหรือทีมอื่นได้ · ส่งตรวจงานของตัวเอง · ตรวจรับงานได้เมื่อถูกระบุเป็นผู้ตรวจ']
