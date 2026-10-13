@@ -594,6 +594,7 @@
     .rep-row { cursor: pointer; }
     .rep-row:hover { background: #FAFBF8; }
     .stat-link { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+    .stat-link.active { border-color: var(--brand-orange); box-shadow: 0 0 0 2px rgba(255,125,20,.35); }
     .stat-link:hover, .stat-link:focus-visible { border-color: var(--brand-orange); box-shadow: 0 4px 18px rgba(255,125,20,.15); }
     .tone-done .stat-icon { background: var(--brand-green-soft); color: var(--brand-green); }
     .tone-done .stat-value { color: var(--brand-green); }
@@ -825,7 +826,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-13-10"></script>
+  <script src="config.js?v=2026-10-13-11"></script>
   <script>
   /* =====================================================================
      หน้าเว็บนี้ไม่มีข้อมูลลับใด ๆ
@@ -872,7 +873,7 @@
     };
 
     function freshListFilter() {
-      return { q: '', team: '', owner: '', assigner: '', status: OPEN_FILTER, priority: '', overdue: false, unassigned: false, unreadOnly: false, newOnly: false, sort: savedSort() };
+      return { q: '', team: '', owner: '', assigner: '', status: OPEN_FILTER, priority: '', overdue: false, soon: false, unassigned: false, unreadOnly: false, newOnly: false, sort: savedSort() };
     }
     /** การเรียงที่ผู้ใช้เลือกไว้ (จำในเครื่องนี้) */
     var SORTS = [['due', 'กำหนดส่งใกล้สุดก่อน'], ['new', 'งานใหม่ล่าสุดก่อน'], ['update', 'อัปเดตล่าสุดก่อน']];
@@ -1556,6 +1557,7 @@
         if (f.assigner && t.assigner !== f.assigner) return false;
         if (f.priority && (f.priority === '__none' ? !!t.priority : t.priority !== f.priority)) return false;
         if (f.overdue && dueInfo(t).kind !== 'overdue') return false;
+        if (f.soon && dueInfo(t).kind !== 'soon') return false;
         if (f.unassigned && !(isUnassigned(t) && !isFinal(t))) return false;
         if (f.unreadOnly && !t.unread) return false;
         if (f.newOnly && !isNewTask(t)) return false;
@@ -1634,7 +1636,7 @@
 
     /** กดการ์ดสถิติ → ไปหน้า "รายการงานทั้งหมด" พร้อมตัวกรองที่ตรงกัน */
     var CARD_FILTER = {
-      list: { status: '' }, play: { status: 'กำลังดำเนินการ' }, alert: { overdue: true },
+      list: { status: '' }, play: { status: 'กำลังดำเนินการ' }, alert: { overdue: true }, clock: { soon: true },
       review: { status: 'ส่งตรวจ' }, users: { unassigned: true }, done: { status: 'เสร็จแล้ว' }
     };
     function bindStatCards(scopeFilter) {
@@ -1815,14 +1817,39 @@
       renderListResults();
     }
 
+    /** การ์ดสถิติในหน้ารายการ: กดแล้วกรองรายการด้านล่างทันที (กดการ์ดเดิมซ้ำ = กลับเป็นยังไม่เสร็จทั้งหมด) */
+    function cardKeyOf(f) {
+      if (f.overdue) return 'alert'; if (f.soon) return 'clock'; if (f.unassigned) return 'users';
+      if (f.status === 'กำลังดำเนินการ') return 'play'; if (f.status === REVIEW) return 'review'; if (f.status === CLOSED) return 'done';
+      if (f.status === '') return 'list';
+      return '';
+    }
+    function bindListCards() {
+      var v = state.view, f = state.filters[v];
+      var cur = cardKeyOf(f);
+      $$('#results .stat[data-card]').forEach(function (card) {
+        var key = card.getAttribute('data-card');
+        if (key === cur) card.classList.add('active');
+        var go = function () {
+          var off = key === cur;
+          f.overdue = false; f.soon = false; f.unassigned = false; f.unreadOnly = false; f.newOnly = false;
+          f.status = OPEN_FILTER;
+          if (!off) Object.assign(f, CARD_FILTER[key]);
+          renderView();
+          var t = $('#results .task-table'); if (t && !off) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        card.addEventListener('click', go);
+        card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      });
+    }
     function renderListResults() {
       var v = state.view, f = state.filters[v];
       var list = applyListFilter(baseList(v), f);
       var titles = { mine: 'งานที่ฉันรับผิดชอบ', assigned: 'งานที่ฉันมอบหมาย', all: 'รายการงานทั้งหมด' };
       var empty = { mine: 'ไม่มีงานที่คุณรับผิดชอบตามเงื่อนไขนี้', assigned: 'ยังไม่มีงานที่คุณมอบหมายตามเงื่อนไขนี้ — กด "สร้างงาน" เพื่อเริ่ม', all: 'ไม่พบงานตามเงื่อนไขที่เลือก' };
-      var scope = f.status === OPEN_FILTER ? ' (ยังไม่เสร็จ)' : f.status ? ' (' + f.status + ')' : '';
+      var scope = f.soon ? ' (ใกล้ครบกำหนด)' : f.status === OPEN_FILTER ? ' (ยังไม่เสร็จ)' : f.status ? ' (' + f.status + ')' : '';
       var showSummary = v === 'assigned';      // งานของฉัน: ไม่แสดงการ์ดสถิติ (ดูที่ Dashboard) · รายการทั้งหมด: ไม่แสดง
-      $('#results').innerHTML = (showSummary ? summaryHtml(baseList(v)) : '') + tableHtml(list, v === 'assigned' ? LIST_COLUMNS.filter(function (k) { return k !== 'action'; }) : LIST_COLUMNS, titles[v] + scope, empty[v]);   // งานที่ฉันมอบหมาย: ไม่มีปุ่ม — กดที่แถวเพื่อเปิด
+      $('#results').innerHTML = (showSummary ? summaryHtml(baseList(v), true) : '') + tableHtml(list, v === 'assigned' ? LIST_COLUMNS.filter(function (k) { return k !== 'action'; }) : LIST_COLUMNS, titles[v] + scope, empty[v]); bindListCards();   // งานที่ฉันมอบหมาย: ไม่มีปุ่ม — กดที่แถวเพื่อเปิด
     }
 
     /* ---------------- รายงานผลงาน (วัดประสิทธิภาพตามช่วงเวลา) ----------------
