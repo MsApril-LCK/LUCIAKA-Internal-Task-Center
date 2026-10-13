@@ -784,7 +784,8 @@
       <div class="user-box">
         <div class="user-row"><span class="avatar" id="userAvatar" aria-hidden="true"></span>
           <div style="min-width:0"><div class="user-name" id="userName"></div><div class="user-meta" id="userMeta"></div></div></div>
-        <button class="logout-btn" id="badgeBtn" type="button" hidden><svg class="icon"><use href="#i-bell"/></svg>เปิดตัวเลขบนไอคอนแอป</button>
+        <button class="logout-btn" id="badgeBtn" type="button" hidden><svg class="icon"><use href="#i-bell"/></svg><span id="badgeBtnText">เปิดตัวเลขบนไอคอนแอป</span></button>
+        <button class="logout-btn" id="pushTestBtn" type="button" hidden><svg class="icon"><use href="#i-bell"/></svg>ทดสอบการแจ้งเตือน</button>
         <button class="logout-btn" id="changePwBtn" type="button"><svg class="icon"><use href="#i-lock"/></svg>เปลี่ยนรหัสผ่าน</button>
         <button class="logout-btn" id="logoutBtn" type="button"><svg class="icon"><use href="#i-logout"/></svg>ออกจากระบบ</button>
       </div>
@@ -826,7 +827,15 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-13-13"></script>
+  <script src="config.js?v=2026-10-13-14"></script>
+  <script>
+  /* Firebase (แจ้งเตือนเข้ามือถือ) — ค่าสาธารณะ ไม่ใช่ข้อมูลลับ */
+  window.ITC_FCM = {
+    config: { apiKey: "AIzaSyBUIcm8e9HGCy-59uEkjvVIZbdyzRxIzJE", authDomain: "luciaka-task-center.firebaseapp.com", projectId: "luciaka-task-center",
+      storageBucket: "luciaka-task-center.firebasestorage.app", messagingSenderId: "257808005051", appId: "1:257808005051:web:51f74e529d0eb8abeb769e" },
+    vapidKey: "BKJFk4Abo_MKnfIL2EoR1DwfSMuyvACdBOsBRjcPWdRGR4F0wwdws0EUgIY0D3E00b54TPJ9h7T03VDdXfOM-oY"
+  };
+  </script>
   <script>
   /* =====================================================================
      หน้าเว็บนี้ไม่มีข้อมูลลับใด ๆ
@@ -1394,17 +1403,84 @@
     function isInstalledApp() { try { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } }
     function syncBadgeBtn() {
       var b = $('#badgeBtn'); if (!b) return;
-      b.hidden = !(isInstalledApp() && (navigator.setAppBadge || 'serviceWorker' in navigator) && window.Notification && Notification.permission === 'default');
+      if (pushSupported()) $('#badgeBtnText').textContent = 'เปิดการแจ้งเตือน';
+      b.hidden = !(isInstalledApp() && (navigator.setAppBadge || 'serviceWorker' in navigator) && window.Notification &&
+        (Notification.permission === 'default' || (pushSupported() && Notification.permission === 'granted' && pushState.failed)));
+      var t = $('#pushTestBtn'); if (t) t.hidden = !pushState.ok;
     }
     function askBadgePermission() {
       try {
         Notification.requestPermission().then(function (r) {
           syncBadgeBtn(); updateBadges();
-          toast(r === 'granted' ? 'เปิดแล้ว — งานที่ต้องดูจะแสดงบนไอคอนแอป' : 'ไม่ได้อนุญาต — เปิดได้ภายหลังในการตั้งค่าการแจ้งเตือนของมือถือ');
           if (r === 'granted') lastNotified = -1;
+          if (r === 'granted' && pushSupported()) { toast('กำลังเปิดการแจ้งเตือน…'); registerPush(true); return; }
+          toast(r === 'granted' ? 'เปิดแล้ว — งานที่ต้องดูจะแสดงบนไอคอนแอป' : 'ไม่ได้อนุญาต — เปิดได้ภายหลังในการตั้งค่าการแจ้งเตือนของมือถือ');
         });
-      } catch (e) { toast('มือถือเครื่องนี้ไม่รองรับตัวเลขบนไอคอนแอป'); }
+      } catch (e) { toast('มือถือเครื่องนี้ไม่รองรับการแจ้งเตือน'); }
     }
+
+    /* ---------------- แจ้งเตือนเข้ามือถือแม้ปิดแอป (Firebase Cloud Messaging) ----------------
+       ใช้ได้เฉพาะแอปที่ติดตั้งจากลิงก์ GitHub (window.ITC_FCM มาจากไฟล์แอป) · iPhone ต้อง iOS 16.4+ และเพิ่มไปยังหน้าจอโฮมแล้ว
+       เครื่องนี้ได้ "รหัสอุปกรณ์" จาก Firebase → ส่งไปเก็บที่เซิร์ฟเวอร์ → เซิร์ฟเวอร์ส่งแจ้งเตือนเมื่อมีงานถึงเรา */
+    var PUSH = (window.ITC_FCM && window.ITC_FCM.config && window.ITC_FCM.vapidKey) ? window.ITC_FCM : null;
+    var FB_VER = '10.12.2', PUSH_KEY = 'itc_push';
+    var pushState = { ok: false, failed: false, busy: false };
+    function pushSupported() { return !!PUSH && !!API_URL && isInstalledApp() && 'serviceWorker' in navigator && 'PushManager' in window && !!window.Notification; }
+    function loadScript(src) {
+      return new Promise(function (res, rej) { var sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = function () { rej(new Error('โหลดตัวแจ้งเตือนไม่สำเร็จ — ตรวจอินเทอร์เน็ต')); }; document.head.appendChild(sc); });
+    }
+    function loadFirebase() {
+      if (window.firebase && firebase.messaging) return Promise.resolve();
+      var base = 'https://www.gstatic.com/firebasejs/' + FB_VER + '/';
+      return loadScript(base + 'firebase-app-compat.js').then(function () { return loadScript(base + 'firebase-messaging-compat.js'); });
+    }
+    function registerPush(interactive) {
+      if (!pushSupported() || Notification.permission !== 'granted' || !state.token || pushState.busy) return Promise.resolve(false);
+      pushState.busy = true;
+      return navigator.serviceWorker.ready.then(function (reg) {
+        return loadFirebase().then(function () {
+          if (!firebase.apps.length) firebase.initializeApp(PUSH.config);
+          return firebase.messaging().getToken({ vapidKey: PUSH.vapidKey, serviceWorkerRegistration: reg });
+        });
+      }).then(function (tok) {
+        if (!tok) throw new Error('มือถือไม่ให้รหัสอุปกรณ์สำหรับแจ้งเตือน');
+        var mark = ''; try { mark = localStorage.getItem(PUSH_KEY) || ''; } catch (e) { /* ไม่เป็นไร */ }
+        var me = (state.boot && state.boot.user && state.boot.user.username) || '';
+        var stamp = me + '|' + tok;
+        if (!interactive && mark.indexOf(stamp + '|') === 0 && Date.now() - (+mark.split('|')[2] || 0) < 864e5) return { ready: true, cached: true };
+        return callAuthed('savePushToken', { token: tok }).then(function (r) {
+          try { localStorage.setItem(PUSH_KEY, stamp + '|' + Date.now()); } catch (e) { /* ไม่เป็นไร */ }
+          pushState.token = tok;
+          return r;
+        });
+      }).then(function (r) {
+        pushState.ok = true; pushState.failed = false;
+        if (interactive) toast(r.ready ? '🔔 เปิดการแจ้งเตือนแล้ว — งานใหม่จะเด้งเข้ามือถือแม้ปิดแอป' : 'เปิดในเครื่องแล้ว แต่ระบบยังไม่ได้ตั้งค่าการส่งแจ้งเตือน — แจ้งผู้ดูแลระบบ');
+        return true;
+      }).catch(function (err) {
+        pushState.ok = false; pushState.failed = true;
+        if (interactive && !err.handled) toast('เปิดการแจ้งเตือนไม่สำเร็จ: ' + cleanError(err));
+        return false;
+      }).then(function (v) { pushState.busy = false; syncBadgeBtn(); return v; });
+    }
+    /** ออกจากระบบ: เลิกส่งแจ้งเตือนเข้ามือถือเครื่องนี้ (คนอื่นที่ล็อกอินต่อจะไม่ได้รับงานของเรา) */
+    function unregisterPush(token) {
+      var mark = ''; try { mark = localStorage.getItem(PUSH_KEY) || ''; localStorage.removeItem(PUSH_KEY); } catch (e) { /* ไม่เป็นไร */ }
+      var tok = pushState.token || mark.split('|')[1] || '';
+      pushState.ok = false; pushState.token = '';
+      if (tok && token) callServer('savePushToken', token, { token: tok, remove: true }).catch(function () { /* ไม่เป็นไร */ });
+    }
+    function sendTestPush() {
+      var b = $('#pushTestBtn'); b.disabled = true;
+      callAuthed('sendTestPush').then(function () { toast('ส่งแล้ว — ลองปิดแอปไว้ แจ้งเตือนจะเด้งภายในไม่กี่วินาที'); })
+        .catch(function (err) { if (!err.handled) toast(cleanError(err)); })
+        .then(function () { b.disabled = false; });
+    }
+    try {
+      navigator.serviceWorker.addEventListener('message', function (e) {   // แจ้งเตือนเข้ามาตอนเปิดแอปอยู่ → ดึงข้อมูลใหม่ทันที
+        if (e.data && e.data.type === 'itc-push') pollOnce();
+      });
+    } catch (e) { /* เบราว์เซอร์ไม่รองรับ — ใช้การเช็กทุก 30 วินาทีตามเดิม */ }
     /**
      * Android: ไอคอนแอปแสดงตัวเลข/จุดจาก "การแจ้งเตือน" เท่านั้น (ไม่รองรับ setAppBadge)
      * → ตอนออกจากแอป ถ้ายังมีงานที่ต้องดู ให้ทิ้งการแจ้งเตือนเงียบ 1 อัน "มีงานรอคุณ N งาน" (อันเดิมถูกแทนที่ ไม่ซ้อน)
@@ -3326,6 +3402,7 @@
     function doLogout() {
       stopPolling();
       var t = state.token;
+      unregisterPush(t);
       clearToken();
       state.token = '';
       if (t) callServer('logout', t).catch(function () { /* ไม่เป็นไร session จะหมดอายุเอง */ });
@@ -3353,6 +3430,7 @@
         if (state.openTaskId && !$('#modal').hidden) openDetail(state.openTaskId);
         if (isRefresh) toast('ดึงข้อมูลล่าสุดแล้ว');
         startPolling();
+        registerPush(false);                              // เคยอนุญาตแล้ว → ลงทะเบียน/ต่ออายุรหัสอุปกรณ์เงียบ ๆ
       }).catch(function (err) {
         if (err.handled) return;
         if (state.boot) { toast('ดึงข้อมูลไม่สำเร็จ: ' + cleanError(err)); return; }
@@ -3422,7 +3500,11 @@
       $('#changePwBtn').addEventListener('click', function () { closeNav(); openChangePassword(); });
 
       $$('.nav-item').forEach(function (b) { b.addEventListener('click', function () { setView(b.getAttribute('data-view')); }); });
-      $('#badgeBtn').addEventListener('click', askBadgePermission);
+      $('#badgeBtn').addEventListener('click', function () {
+        if (window.Notification && Notification.permission === 'granted' && pushSupported()) { toast('กำลังเปิดการแจ้งเตือน…'); registerPush(true); }
+        else askBadgePermission();
+      });
+      $('#pushTestBtn').addEventListener('click', sendTestPush);
       syncBadgeBtn();
       $('#menuBtn').addEventListener('click', function () { document.body.classList.contains('nav-open') ? closeNav() : openNav(); });
       $('#overlay').addEventListener('click', closeNav);
