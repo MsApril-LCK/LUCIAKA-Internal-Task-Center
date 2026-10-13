@@ -514,6 +514,11 @@
     .nav-badge { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--brand-orange); color: var(--on-orange);
       font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
     .nav-item[aria-current="page"] .nav-badge { background: #fff; color: #8A3F00; }
+    .nav-badge.pop { animation: badgePop .9s ease 2; }
+    @keyframes badgePop { 0%,100% { transform: scale(1); } 30% { transform: scale(1.45); box-shadow: 0 0 0 6px rgba(255,125,20,.25); } 60% { transform: scale(.92); } }
+    .menu-btn { position: relative; }
+    .menu-dot { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--brand-orange); color: #fff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+    .menu-dot[hidden] { display: none; }
     .nav-badge.soft { background: rgba(255,255,255,.18); color: #fff; }
     .nav-sep { height: 1px; background: rgba(255,255,255,.12); margin: 8px 12px; }
     .side-create { margin: 16px 12px 0; width: calc(100% - 24px); padding: 11px 14px; font-size: 15px; }
@@ -564,6 +569,18 @@
     .table-wrap .task-table th { white-space: normal; }
     .table-wrap .avatar { width: 24px; height: 24px; font-size: 12px; }
     .summary.six { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    /* มือถือ: ตัวกรองพับไว้ เหลือช่องค้นหา + ปุ่ม "ตัวกรอง" */
+    .f-toggle { display: none; }
+    @media (max-width: 760px) {
+      .f-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; grid-column: 1 / -1; width: 100%;
+        padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); font: inherit; font-weight: 600; color: var(--text); cursor: pointer; }
+      .f-toggle .f-n { display: inline-flex; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--brand-orange); color: #fff; font-size: 12px; align-items: center; justify-content: center; }
+      .f-toggle .f-n:empty { display: none; }
+      .f-toggle::after { content: '▾'; margin-left: auto; color: var(--text-muted); }
+      .filters.open .f-toggle::after { content: '▴'; }
+      .filters.collapsible:not(.open) > :not(.search-field):not(.f-toggle) { display: none !important; }
+      .filters.m-search-only > :not(.search-field) { display: none !important; }
+    }
     @media (min-width: 1500px) { .summary.six { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
     .period-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; box-shadow: var(--shadow); }
@@ -681,6 +698,8 @@
     <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7.5V19l-4 1.5v-8z"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
     <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z"/></symbol>
@@ -752,7 +771,7 @@
       <nav class="nav">
         <button class="nav-item" data-view="dashboard" type="button"><svg class="icon"><use href="#i-grid"/></svg><span class="nav-text">Dashboard</span></button>
         <button class="nav-item" data-view="report" type="button"><svg class="icon"><use href="#i-chart"/></svg><span class="nav-text">รายงานผลงาน</span></button>
-        <button class="nav-item" data-view="mine" type="button"><svg class="icon"><use href="#i-user"/></svg><span class="nav-text">งานของฉัน</span><span class="nav-badge soft" id="badgeMine" hidden></span></button>
+        <button class="nav-item" data-view="mine" type="button"><svg class="icon"><use href="#i-user"/></svg><span class="nav-text">งานของฉัน</span><span class="nav-badge" id="badgeMine" hidden></span></button>
         <button class="nav-item" data-view="checklist" type="button"><svg class="icon"><use href="#i-checklist"/></svg><span class="nav-text">เช็กลิสต์ของฉัน</span><span class="nav-badge soft" id="badgeCheck" hidden></span></button>
         <button class="nav-item" data-view="assigned" type="button"><svg class="icon"><use href="#i-send"/></svg><span class="nav-text">งานที่ฉันมอบหมาย</span><span class="nav-badge" id="badgeAssigned" hidden></span></button>
         <button class="nav-item" data-view="review" type="button"><svg class="icon"><use href="#i-review"/></svg><span class="nav-text">งานรอตรวจ</span><span class="nav-badge" id="badgeReview" hidden></span></button>
@@ -764,6 +783,7 @@
       <div class="user-box">
         <div class="user-row"><span class="avatar" id="userAvatar" aria-hidden="true"></span>
           <div style="min-width:0"><div class="user-name" id="userName"></div><div class="user-meta" id="userMeta"></div></div></div>
+        <button class="logout-btn" id="badgeBtn" type="button" hidden><svg class="icon"><use href="#i-bell"/></svg>เปิดตัวเลขบนไอคอนแอป</button>
         <button class="logout-btn" id="changePwBtn" type="button"><svg class="icon"><use href="#i-lock"/></svg>เปลี่ยนรหัสผ่าน</button>
         <button class="logout-btn" id="logoutBtn" type="button"><svg class="icon"><use href="#i-logout"/></svg>ออกจากระบบ</button>
       </div>
@@ -773,7 +793,7 @@
 
     <div class="main">
       <header class="topbar">
-        <button class="btn btn-icon menu-btn" id="menuBtn" type="button" aria-label="เปิดเมนู" aria-controls="sidebar" aria-expanded="false"><svg class="icon"><use href="#i-menu"/></svg></button>
+        <button class="btn btn-icon menu-btn" id="menuBtn" type="button" aria-label="เปิดเมนู" aria-controls="sidebar" aria-expanded="false"><svg class="icon"><use href="#i-menu"/></svg><span class="menu-dot" id="menuDot" hidden></span></button>
         <div class="page-head">
           <h1 class="page-title" id="pageTitle">Dashboard</h1>
           <p class="page-sub" id="pageSub"></p>
@@ -805,7 +825,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-13-8"></script>
+  <script src="config.js?v=2026-10-13-10"></script>
   <script>
   /* =====================================================================
      หน้าเว็บนี้ไม่มีข้อมูลลับใด ๆ
@@ -1360,7 +1380,44 @@
       ba.textContent = a; ba.hidden = !a; ba.setAttribute('aria-label', a + ' งานรอมอบหมาย');
       var br = $('#badgeReview'), bm = $('#badgeMine');
       br.textContent = r; br.hidden = !r; br.setAttribute('aria-label', r + ' งานรอตรวจ');
-      bm.textContent = m; bm.hidden = !m; bm.title = m + ' งานต้องแก้ไขหรือมีอัปเดตใหม่';
+      bm.textContent = m; bm.hidden = !m; bm.title = m + ' งานใหม่ / ต้องแก้ไข / มีอัปเดตใหม่';
+      // ตัวเลขรวมบนแท็บเบราว์เซอร์และไอคอนแอป (มือถือ/คอมที่รองรับ) = งานของฉันที่ต้องดู + งานรอตรวจ + งานรอมอบหมาย
+      var total = m + r + a;
+      document.title = (total ? '(' + total + ') ' : '') + BASE_TITLE;
+      var md = $('#menuDot'); if (md) { md.textContent = total > 99 ? '99+' : total; md.hidden = !total; }   // มือถือ: ตัวเลขบนปุ่ม ☰
+      try { if (navigator.setAppBadge) { if (total) navigator.setAppBadge(total); else navigator.clearAppBadge(); } } catch (e) { /* ไม่รองรับ */ }
+    }
+    /** แอปที่ติดตั้งบนมือถือ: iPhone ต้องอนุญาตการแจ้งเตือนก่อน ตัวเลขบนไอคอนแอปถึงจะขึ้น */
+    function isInstalledApp() { try { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } }
+    function syncBadgeBtn() {
+      var b = $('#badgeBtn'); if (!b) return;
+      b.hidden = !(isInstalledApp() && navigator.setAppBadge && window.Notification && Notification.permission === 'default');
+    }
+    function askBadgePermission() {
+      try {
+        Notification.requestPermission().then(function (r) {
+          syncBadgeBtn(); updateBadges();
+          toast(r === 'granted' ? 'เปิดแล้ว — ตัวเลขงานที่ต้องดูจะขึ้นบนไอคอนแอป' : 'ไม่ได้อนุญาต — เปิดได้ภายหลังในการตั้งค่าการแจ้งเตือนของมือถือ');
+        });
+      } catch (e) { toast('มือถือเครื่องนี้ไม่รองรับตัวเลขบนไอคอนแอป'); }
+    }
+    var BASE_TITLE = document.title.replace(/^\(\d+\) /, '');
+    /** หลังดึงข้อมูลใหม่: มีงานเข้ามาในงานของฉัน → เด้งแจ้งเตือน */
+    function notifyNewMine(prevTasks) {
+      if (!prevTasks) return;
+      var before = {}; prevTasks.forEach(function (t) { before[t.id] = t; });
+      var fresh = 0, upd = 0;
+      state.tasks.forEach(function (t) {
+        if (!t.unread || !t.perms || !t.perms.involvement.owner) return;
+        var o = before[t.id];
+        if (!o || !o.perms || !o.perms.involvement.owner) fresh++;
+        else if (!o.unread) upd++;
+      });
+      if (!fresh && !upd) return;
+      var msg = fresh ? '🔔 มีงานใหม่เข้ามา ' + fresh + ' งาน' + (upd ? ' · อัปเดตใหม่ ' + upd + ' งาน' : '') : '🔔 งานของฉันมีอัปเดตใหม่ ' + upd + ' งาน';
+      toast(msg + ' — ดูที่เมนูงานของฉัน');
+      var bm = $('#badgeMine'); if (bm) { bm.classList.remove('pop'); void bm.offsetWidth; bm.classList.add('pop'); }
+      try { if (navigator.vibrate) navigator.vibrate(120); } catch (e) { /* ไม่รองรับ */ }
     }
 
     /* ---------------- ส่วนประกอบหน้า ---------------- */
@@ -1713,7 +1770,7 @@
         fresh: base.filter(isNewTask).length
       };
       if (v === 'mine') html += '<div id="ckMine"></div>';
-      html += '<div class="filters list-filters" role="search">' +
+      html += '<div class="filters list-filters collapsible" role="search">' +
         '<div class="field search-field"><label for="fQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
           '<input class="input" id="fQ" type="search" placeholder="ชื่องาน หรือเลขที่งาน…" value="' + esc(f.q) + '" autocomplete="off"></div></div>' +
         '<div class="field"><label for="fTeam">ทีม</label><select class="select" id="fTeam">' + options(teams, f.team, 'ทุกทีม') + '</select></div>' +
@@ -1831,7 +1888,7 @@
     function renderReport() {
       var f = state.filters.report || (state.filters.report = { assigner: '', team: '' });
       var html = periodBar() +
-        '<div class="filters cols-3" role="search">' +
+        '<div class="filters cols-3 collapsible" role="search">' +
           '<div class="field"><label for="rpAssigner">ผู้มอบหมาย</label><select class="select" id="rpAssigner">' + options(filterAssigners(true), f.assigner, 'ทุกคน') + '</select>' +
             '<span class="hint">' + (headScoped() ? 'เลือกลูกทีมเพื่อดูเฉพาะงานที่คนนั้นสั่ง' : 'เช่น เลือก CEO เพื่อดูเฉพาะงานที่ CEO สั่ง') + '</span></div>' +
           '<div class="field"><label for="rpTeam">ทีม</label><select class="select" id="rpTeam">' + options(visibleTeams(), f.team, 'ทุกทีม') + '</select></div>' +
@@ -1964,10 +2021,10 @@
     /* ---------------- หน้างานรอตรวจ ---------------- */
     function renderReview() {
       var f = state.filters.review;
-      var html = '<div class="filters cols-2" role="search"><div class="field search-field"><label for="rQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
+      var html = '<div class="filters cols-2 m-search-only" role="search"><div class="field search-field"><label for="rQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
         '<input class="input" id="rQ" type="search" placeholder="ชื่องาน หรือเลขที่งาน…" value="' + esc(f.q) + '" autocomplete="off"></div></div>' +
         '<div class="field"><span class="field-label">วิธีตรวจ</span><div class="hint" style="padding-top:8px">กด "ตรวจงาน" เพื่อดูโจทย์ ผลงาน และประวัติ แล้วเลือก เสร็จสิ้น หรือ ขอแก้ไข</div></div></div>' +
-        '<div class="filters cols-2" style="margin-top:-6px"><div class="field"><label for="rSort">เรียงตาม</label><select class="select" id="rSort">' +
+        '<div class="filters cols-2 collapsible" style="margin-top:-6px"><div class="field"><label for="rSort">เรียงตาม</label><select class="select" id="rSort">' +
           REVIEW_SORTS.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === f.sort ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</select></div>' +
         '<div class="field"><label for="rWait">ระยะเวลารอตรวจ</label><select class="select" id="rWait">' +
           REVIEW_WAITS.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === f.wait ? ' selected' : '') + '>' + esc(x[1]) + '</option>'; }).join('') + '</select></div></div>' +
@@ -1996,7 +2053,7 @@
 
     function renderToAssign() {
       var f = state.filters.toassign;
-      var html = '<div class="filters cols-2" role="search"><div class="field search-field"><label for="aQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
+      var html = '<div class="filters cols-2 m-search-only" role="search"><div class="field search-field"><label for="aQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
         '<input class="input" id="aQ" type="search" placeholder="ชื่องาน หรือเลขที่งาน…" value="' + esc(f.q) + '" autocomplete="off"></div></div>' +
         '<div class="field"><span class="field-label">วิธีมอบหมาย</span><div class="hint" style="padding-top:8px">กด "มอบหมาย" → ติ๊กลูกทีมที่จะทำ → เลือกผู้รับผิดชอบหลัก → บันทึก · งานจะย้ายไป "งานของฉัน" ของลูกทีม</div></div></div>' +
         '<div id="results"></div>';
@@ -2016,6 +2073,37 @@
     }
 
     /* ---------------- สลับหน้า ---------------- */
+    /** มือถือ: ใส่ปุ่ม "ตัวกรอง" ให้แถบตัวกรองที่พับได้ (จอกว้างไม่เห็นปุ่มนี้ — CSS ซ่อน) */
+    var F_SORT_IDS = ['fSort', 'rSort', 'ckSortSel'];
+    function activeFilterCount(box) {
+      var n = 0;
+      $$('select', box).forEach(function (el) {
+        if (F_SORT_IDS.indexOf(el.id) > -1) return;
+        if (el.id === 'fStatus' ? el.value !== OPEN_FILTER : el.value !== '') n++;
+      });
+      $$('.qchip[aria-pressed="true"]', box).forEach(function (b) { if (b.getAttribute('data-ckq') !== '') n++; });
+      return n;
+    }
+    function enhanceFilters() {
+      state.fOpen = state.fOpen || {};
+      $$('#content .filters.collapsible').forEach(function (box, i) {
+        if ($('.f-toggle', box)) return;
+        var key = state.view + ':' + i;
+        var btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'f-toggle';
+        btn.innerHTML = icon('filter') + '<span>ตัวกรอง' + ($('.search-field', box) ? 'เพิ่มเติม' : '') + '</span><span class="f-n"></span>';
+        var sf = $('.search-field', box);
+        if (sf && sf.nextSibling) box.insertBefore(btn, sf.nextSibling); else if (sf) box.appendChild(btn); else box.insertBefore(btn, box.firstChild);
+        var sync = function () { var n = activeFilterCount(box); $('.f-n', btn).textContent = n ? String(n) : ''; btn.setAttribute('aria-expanded', box.classList.contains('open')); };
+        if (state.fOpen[key]) box.classList.add('open');
+        btn.addEventListener('click', function () { box.classList.toggle('open'); state.fOpen[key] = box.classList.contains('open'); sync(); });
+        box.addEventListener('change', function () { setTimeout(sync, 0); });
+        box.addEventListener('click', function (e) { if (e.target.closest('.qchip, .btn')) setTimeout(sync, 0); });
+        sync();
+      });
+    }
+    // เนื้อหาหน้าเปลี่ยนเมื่อไร (วาดหน้าใหม่) → ใส่ปุ่มตัวกรองสำหรับมือถือ
+    (function () { var c = document.getElementById('content'); if (c && window.MutationObserver) new MutationObserver(function () { enhanceFilters(); }).observe(c, { childList: true }); })();
     function renderView() {
       var v = state.view;
       if (v === 'dashboard') renderDashboard();
@@ -2781,7 +2869,7 @@
           '<button class="btn btn-primary" type="submit" id="ckAdd">' + icon('plus') + 'เพิ่ม</button></form>' +
         CK_PRIVATE_NOTE +
         '<div id="ckError" style="padding:0 18px"></div></section>' +
-        '<div class="filters cols-2" role="search" style="margin-bottom:16px"><div class="field search-field"><label for="ckQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
+        '<div class="filters cols-2 collapsible" role="search" style="margin-bottom:16px"><div class="field search-field"><label for="ckQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
           '<input class="input" id="ckQ" type="search" placeholder="พิมพ์คำในรายการ…" value="' + esc(f.q) + '" autocomplete="off"></div></div>' +
         '<div class="field"><label for="ckSortSel">เรียงตาม</label><select class="select" id="ckSortSel">' +
           CK_SORTS.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === f.sort ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></div>' +
@@ -3104,6 +3192,7 @@
     function showLogin(notice) {
       closeModal(true);
       state.boot = null; state.tasks = []; state.pendingPassword = ''; state.settings = null; histCache = {};
+      document.title = BASE_TITLE; try { if (navigator.clearAppBadge) navigator.clearAppBadge(); } catch (e) { /* ไม่รองรับ */ }
       showScreen('login');
       $('#loginForm').hidden = false; $('#pwForm').hidden = true;
       $('#loginNotice').innerHTML = notice ? '<div class="notice notice-warn">' + esc(notice) + '</div>' : '';
@@ -3247,7 +3336,9 @@
       state.pendingReload = false;
       return callAuthed('getBootstrap').then(function (boot) {
         if (!$('#modal').hidden || state.modalBusy || isTyping()) { state.pendingReload = true; return; }
+        var prevTasks = state.tasks;
         applyBoot(boot);
+        setTimeout(function () { notifyNewMine(prevTasks); }, 0);
         applyRoleToShell();
         var v = state.view;
         if (v === 'settings') { updateBadges(); return; }
@@ -3274,6 +3365,8 @@
       $('#changePwBtn').addEventListener('click', function () { closeNav(); openChangePassword(); });
 
       $$('.nav-item').forEach(function (b) { b.addEventListener('click', function () { setView(b.getAttribute('data-view')); }); });
+      $('#badgeBtn').addEventListener('click', askBadgePermission);
+      syncBadgeBtn();
       $('#menuBtn').addEventListener('click', function () { document.body.classList.contains('nav-open') ? closeNav() : openNav(); });
       $('#overlay').addEventListener('click', closeNav);
       $('#navClose').addEventListener('click', closeNav);
