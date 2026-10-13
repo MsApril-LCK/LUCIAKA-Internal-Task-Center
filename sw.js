@@ -1,6 +1,6 @@
 /* Service worker — เก็บเฉพาะไฟล์หน้าแอปไว้เปิดเร็ว (ไม่เก็บข้อมูลงาน)
  * ดึงไฟล์ใหม่จากเซิร์ฟเวอร์ก่อนเสมอ ใช้ไฟล์ที่เก็บไว้เมื่อไม่มีอินเทอร์เน็ตเท่านั้น */
-const CACHE = 'itc-shell-2026-10-13-11';
+const CACHE = 'itc-shell-2026-10-13-12';
 const SHELL = ['./', 'index.html', 'config.js', 'manifest.webmanifest', 'logo.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-48.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
@@ -14,4 +14,12 @@ self.addEventListener('fetch', e => {
     if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
     return res;
   }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('index.html'))));
+});
+// กดการแจ้งเตือน → เปิดแอป (ถ้าเปิดค้างอยู่ให้สลับไปหน้าแอป)
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ('focus' in c) return c.focus(); }
+    return self.clients.openWindow('./');
+  }));
 });

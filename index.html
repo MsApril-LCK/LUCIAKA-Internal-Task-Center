@@ -826,7 +826,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-13-11"></script>
+  <script src="config.js?v=2026-10-13-12"></script>
   <script>
   /* =====================================================================
      หน้าเว็บนี้ไม่มีข้อมูลลับใด ๆ
@@ -1387,21 +1387,50 @@
       document.title = (total ? '(' + total + ') ' : '') + BASE_TITLE;
       var md = $('#menuDot'); if (md) { md.textContent = total > 99 ? '99+' : total; md.hidden = !total; }   // มือถือ: ตัวเลขบนปุ่ม ☰
       try { if (navigator.setAppBadge) { if (total) navigator.setAppBadge(total); else navigator.clearAppBadge(); } } catch (e) { /* ไม่รองรับ */ }
+      lastTotal = total;
+      if (!total && lastNotified > 0) showCountNotification(0);
     }
     /** แอปที่ติดตั้งบนมือถือ: iPhone ต้องอนุญาตการแจ้งเตือนก่อน ตัวเลขบนไอคอนแอปถึงจะขึ้น */
     function isInstalledApp() { try { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } }
     function syncBadgeBtn() {
       var b = $('#badgeBtn'); if (!b) return;
-      b.hidden = !(isInstalledApp() && navigator.setAppBadge && window.Notification && Notification.permission === 'default');
+      b.hidden = !(isInstalledApp() && (navigator.setAppBadge || 'serviceWorker' in navigator) && window.Notification && Notification.permission === 'default');
     }
     function askBadgePermission() {
       try {
         Notification.requestPermission().then(function (r) {
           syncBadgeBtn(); updateBadges();
-          toast(r === 'granted' ? 'เปิดแล้ว — ตัวเลขงานที่ต้องดูจะขึ้นบนไอคอนแอป' : 'ไม่ได้อนุญาต — เปิดได้ภายหลังในการตั้งค่าการแจ้งเตือนของมือถือ');
+          toast(r === 'granted' ? 'เปิดแล้ว — งานที่ต้องดูจะแสดงบนไอคอนแอป' : 'ไม่ได้อนุญาต — เปิดได้ภายหลังในการตั้งค่าการแจ้งเตือนของมือถือ');
+          if (r === 'granted') lastNotified = -1;
         });
       } catch (e) { toast('มือถือเครื่องนี้ไม่รองรับตัวเลขบนไอคอนแอป'); }
     }
+    /**
+     * Android: ไอคอนแอปแสดงตัวเลข/จุดจาก "การแจ้งเตือน" เท่านั้น (ไม่รองรับ setAppBadge)
+     * → ตอนออกจากแอป ถ้ายังมีงานที่ต้องดู ให้ทิ้งการแจ้งเตือนเงียบ 1 อัน "มีงานรอคุณ N งาน" (อันเดิมถูกแทนที่ ไม่ซ้อน)
+     *   เปิดแอปแล้วไม่มีงานค้าง → ลบการแจ้งเตือนนี้ทิ้ง · iPhone/คอมใช้ setAppBadge ตามเดิม
+     */
+    var lastNotified = -1, lastTotal = 0;
+    function canNotify() { return isInstalledApp() && window.Notification && Notification.permission === 'granted' && 'serviceWorker' in navigator; }
+    function usesNotifBadge() { return /Android/i.test(navigator.userAgent); }
+    function showCountNotification(total, force) {
+      if (!canNotify() || !usesNotifBadge()) return;
+      navigator.serviceWorker.getRegistration().then(function (reg) {
+        if (!reg) return;
+        if (!total) { reg.getNotifications({ tag: 'itc-count' }).then(function (ns) { ns.forEach(function (n) { n.close(); }); }); lastNotified = 0; return; }
+        if (total === lastNotified && !force) return;
+        lastNotified = total;
+        reg.showNotification('LUCIAKA Task Center', {
+          body: 'มีงานรอคุณ ' + total + ' งาน — แตะเพื่อเปิดดู', tag: 'itc-count', renotify: false, silent: true,
+          icon: 'icons/icon-192.png', badge: 'icons/favicon-48.png', data: { total: total }
+        });
+      }).catch(function () { /* ไม่เป็นไร */ });
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (!state.boot) return;
+      if (document.hidden) showCountNotification(lastTotal);
+      else if (!lastTotal) showCountNotification(0);
+    });
     var BASE_TITLE = document.title.replace(/^\(\d+\) /, '');
     /** หลังดึงข้อมูลใหม่: มีงานเข้ามาในงานของฉัน → เด้งแจ้งเตือน */
     function notifyNewMine(prevTasks) {
@@ -1419,6 +1448,7 @@
       toast(msg + ' — ดูที่เมนูงานของฉัน');
       var bm = $('#badgeMine'); if (bm) { bm.classList.remove('pop'); void bm.offsetWidth; bm.classList.add('pop'); }
       try { if (navigator.vibrate) navigator.vibrate(120); } catch (e) { /* ไม่รองรับ */ }
+      if (fresh && usesNotifBadge()) showCountNotification(lastTotal, true);
     }
 
     /* ---------------- ส่วนประกอบหน้า ---------------- */
