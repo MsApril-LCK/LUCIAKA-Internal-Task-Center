@@ -665,6 +665,14 @@
     .pw-box { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 20px; font-weight: 700; letter-spacing: .04em;
       background: var(--surface-2); border: 1px dashed var(--brand-green); border-radius: 10px; padding: 14px; text-align: center; user-select: all; }
     .role-table td:first-child { white-space: nowrap; font-weight: 600; }
+    /* คอมพิวเตอร์: ตารางกว้างเกินจอ → ปุ่ม เปิด/ตรวจงาน ติดขอบขวาเสมอ (ไม่ตกขอบ) ส่วนคอลัมน์อื่นเลื่อนซ้าย-ขวาได้ */
+    @media (min-width: 761px) {
+      .table-wrap .task-table td.cell-action, .table-wrap .task-table th.cell-action { position: sticky; right: 0; z-index: 1; width: 1%; white-space: nowrap;
+        background: var(--surface); box-shadow: -10px 0 10px -10px rgba(0,0,0,.18); }
+      .table-wrap .task-table th.cell-action { background: var(--surface-2); }
+      .table-wrap .task-row:hover td.cell-action { background: #FAFBF8; }
+      .table-wrap .task-row.row-ask td.cell-action { background: #F3F6FF; }
+    }
 
     @media (max-width: 1180px) {
       .summary.six { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -827,7 +835,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-13-14"></script>
+  <script src="config.js?v=2026-10-13-17"></script>
   <script>
   /* Firebase (แจ้งเตือนเข้ามือถือ) — ค่าสาธารณะ ไม่ใช่ข้อมูลลับ */
   window.ITC_FCM = {
@@ -881,13 +889,15 @@
       settings: { title: 'ตั้งค่าระบบ', sub: 'จัดการพนักงาน ทีม และสิทธิ์ (เฉพาะผู้ดูแลระบบ)' }
     };
 
-    function freshListFilter() {
-      return { q: '', team: '', owner: '', assigner: '', status: OPEN_FILTER, priority: '', overdue: false, soon: false, unassigned: false, unreadOnly: false, newOnly: false, sort: savedSort() };
+    function freshListFilter(view) {
+      return { q: '', team: '', owner: '', assigner: '', status: OPEN_FILTER, priority: '', overdue: false, soon: false, unassigned: false, unreadOnly: false, newOnly: false, sort: savedSort(view) };
     }
     /** การเรียงที่ผู้ใช้เลือกไว้ (จำในเครื่องนี้) */
     var SORTS = [['due', 'กำหนดส่งใกล้สุดก่อน'], ['new', 'งานใหม่ล่าสุดก่อน'], ['update', 'อัปเดตล่าสุดก่อน']];
-    function savedSort() { try { var v = localStorage.getItem('itc_sort'); return SORTS.some(function (x) { return x[0] === v; }) ? v : 'due'; } catch (e) { return 'due'; } }
-    function saveSort(v) { try { localStorage.setItem('itc_sort', v); } catch (e) { /* ไม่เป็นไร */ } }
+    // งานของฉัน: ค่าเริ่มต้น = งานใหม่ล่าสุดก่อน (จำแยกจากหน้าอื่น) · หน้าอื่น: กำหนดส่งใกล้สุดก่อน
+    function sortKey(view) { return view === 'mine' ? 'itc_sort_mine' : 'itc_sort'; }
+    function savedSort(view) { var def = view === 'mine' ? 'new' : 'due'; try { var v = localStorage.getItem(sortKey(view)); return SORTS.some(function (x) { return x[0] === v; }) ? v : def; } catch (e) { return def; } }
+    function saveSort(v, view) { try { localStorage.setItem(sortKey(view), v); } catch (e) { /* ไม่เป็นไร */ } }
     var REVIEW_SORTS = [['wait', 'รอตรวจนานสุดก่อน'], ['sent', 'ส่งมาล่าสุดก่อน'], ['due', 'กำหนดส่งใกล้สุดก่อน']];
     var REVIEW_WAITS = [['', 'ทั้งหมด'], ['warn', 'รอเกิน 3 วันทำการ'], ['late', 'รอเกิน 5 วันทำการ'], ['ask', 'เฉพาะคำถามขอความเห็น']];
     /** เวลาที่เริ่มรอผู้ตรวจ: ส่งตรวจ (หรือผู้รับผิดชอบตอบกลับล่าสุด) · คำถามขอความเห็น = เวลาที่ถาม */
@@ -911,7 +921,7 @@
     function freshFilters() {
       return {
         dashboard: { tab: 'overall', person: '', team: '', status: OPEN_FILTER },
-        mine: freshListFilter(), assigned: freshListFilter(), all: freshListFilter(),
+        mine: freshListFilter('mine'), assigned: freshListFilter('assigned'), all: freshListFilter('all'),
         review: { q: '', sort: 'wait', wait: '' },
         toassign: { q: '' },
         report: { assigner: '', team: '' }
@@ -1638,7 +1648,7 @@
       }).join('') : '<tr><td colspan="' + cols.length + '"><div class="empty">' + icon('inbox') + '<div>' + esc(emptyText || 'ไม่พบงานตามเงื่อนไขที่เลือก') + '</div></div></td></tr>';
       return '<section class="panel"><div class="panel-head"><h2 class="panel-title">' + esc(title) + '</h2>' +
         '<span class="count" data-count>แสดง ' + rows.length + ' งาน · กดที่รายการเพื่อดูรายละเอียด</span></div>' +
-        '<div class="table-wrap"><table class="task-table"><thead><tr>' + cols.map(function (k) { return '<th scope="col">' + COLUMNS[k].label + '</th>'; }).join('') +
+        '<div class="table-wrap"><table class="task-table"><thead><tr>' + cols.map(function (k) { return '<th scope="col"' + (COLUMNS[k].cls ? ' class="' + COLUMNS[k].cls + '"' : '') + '>' + COLUMNS[k].label + '</th>'; }).join('') +
         '</tr></thead><tbody>' + body + '</tbody></table></div></section>';
     }
 
@@ -1863,6 +1873,15 @@
     function renderList() {
       var v = state.view, f = state.filters[v], base = baseList(v);
       var teams = visibleTeams(), people = filterPeople(v === 'all'), assigners = filterAssigners();
+      // งานของฉัน: ผู้รับผิดชอบคือเราเสมอ → ไม่แสดงช่องนี้ · งานที่ฉันมอบหมาย: ผู้มอบหมายคือเรา → ไม่แสดง และผู้รับผิดชอบเหลือเฉพาะคนที่เรามอบหมายให้
+      // รายการงานทั้งหมด: ถ้ามีตัวเลือกคนเดียว (เช่น พนักงานที่เห็นแค่งานตัวเอง) → ไม่แสดง
+      if (v === 'assigned') people = uniq([].concat.apply([], base.map(function (t) { return t.owners || []; })));
+      if (v === 'mine' || v === 'all') assigners = uniq(base.map(function (t) { return t.assigner; }).filter(Boolean));
+      if (v === 'all') people = people.filter(function (n) { return base.some(function (t) { return (t.owners || []).indexOf(n) > -1; }); });
+      var showOwner = v !== 'mine' && (v === 'assigned' || people.length > 1 || !!f.owner);
+      var showAssigner = v !== 'assigned' && (assigners.length > 1 || !!f.assigner);
+      if (!showOwner) f.owner = '';
+      if (!showAssigner) f.assigner = '';
       var html = '';
       if (v === 'mine' && myRevisions().length) {
         html += '<div class="callout callout-warn"><div class="callout-title">' + icon('alert') + 'มีงานที่ผู้ตรวจขอแก้ไข ' + myRevisions().length + ' งาน</div>' +
@@ -1882,8 +1901,8 @@
         '<div class="field search-field"><label for="fQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
           '<input class="input" id="fQ" type="search" placeholder="ชื่องาน หรือเลขที่งาน…" value="' + esc(f.q) + '" autocomplete="off"></div></div>' +
         '<div class="field"><label for="fTeam">ทีม</label><select class="select" id="fTeam">' + options(teams, f.team, 'ทุกทีม') + '</select></div>' +
-        '<div class="field"><label for="fOwner">ผู้รับผิดชอบ</label><select class="select" id="fOwner">' + options(people, f.owner, 'ทุกคน') + '</select></div>' +
-        '<div class="field"><label for="fAssigner">ผู้มอบหมาย</label><select class="select" id="fAssigner">' + options(assigners, f.assigner, 'ทุกคน') + '</select></div>' +
+        (showOwner ? '<div class="field"><label for="fOwner">ผู้รับผิดชอบ</label><select class="select" id="fOwner">' + options(people, f.owner, 'ทุกคน') + '</select></div>' : '') +
+        (showAssigner ? '<div class="field"><label for="fAssigner">ผู้มอบหมาย</label><select class="select" id="fAssigner">' + options(assigners, f.assigner, 'ทุกคน') + '</select></div>' : '') +
         '<div class="field"><label for="fStatus">สถานะ</label><select class="select" id="fStatus">' + statusFilterOptions(f.status) + '</select></div>' +
         '<div class="field"><label for="fPriority">ความสำคัญ</label><select class="select" id="fPriority"><option value="">ทุกระดับ</option>' +
           state.boot.priorities.map(function (p) { return '<option value="' + esc(p) + '"' + (p === f.priority ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') +
@@ -1907,7 +1926,7 @@
         var el = $('#' + id); if (!el) return;
         el.addEventListener(evt || 'change', function () { f[key] = el.value; renderListResults(); });
       };
-      if ($('#fSort')) $('#fSort').addEventListener('change', function () { f.sort = this.value; saveSort(this.value); renderListResults(); });
+      if ($('#fSort')) $('#fSort').addEventListener('change', function () { f.sort = this.value; saveSort(this.value, v); renderListResults(); });
       on('fQ', 'q', 'input'); on('fTeam', 'team'); on('fOwner', 'owner'); on('fAssigner', 'assigner'); on('fStatus', 'status'); on('fPriority', 'priority');
       $$('.qchip', $('#content')).forEach(function (b) {
         b.addEventListener('click', function () {
@@ -1918,7 +1937,7 @@
           renderView();
         });
       });
-      $('#fReset').addEventListener('click', function () { var keep = f.sort; state.filters[v] = freshListFilter(); state.filters[v].sort = keep; renderView(); });
+      $('#fReset').addEventListener('click', function () { var keep = f.sort; state.filters[v] = freshListFilter(v); state.filters[v].sort = keep; renderView(); });
       if ($('#showRevise')) $('#showRevise').addEventListener('click', function () { f.status = REVISE; renderView(); });
       renderListResults();
     }
