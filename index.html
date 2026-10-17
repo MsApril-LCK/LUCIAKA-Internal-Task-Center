@@ -655,6 +655,12 @@
     .tl-dot.t-approve { background: var(--brand-green); } .tl-dot.t-cancel { background: #9AA0A6; } .tl-dot.t-comment { background: var(--info); } .tl-dot.t-create { background: var(--brand-orange); }
     .tl-head { font-size: 13px; color: var(--text-muted); }
     .tl-head strong { color: var(--text); }
+    .cc-pick { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; background: var(--surface); }
+    .cc-pick > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .cc-pick > summary::-webkit-details-marker { display: none; }
+    .cc-pick > summary::after { content: '▾'; margin-left: auto; color: var(--text-muted); }
+    .cc-pick[open] > summary::after { content: '▴'; }
+    .cc-sum { font-size: 14px; color: var(--text); }
     .tag-mini.cc { background: #EAF2FF; color: #1F4E9C; border-color: #C9DBFB; }
     /* ไฟล์แนบ */
     .attach-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
@@ -866,7 +872,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-17-5"></script>
+  <script src="config.js?v=2026-10-17-6"></script>
   <script>
   /* Firebase (แจ้งเตือนเข้ามือถือ) — ค่าสาธารณะ ไม่ใช่ข้อมูลลับ */
   window.ITC_FCM = {
@@ -1205,14 +1211,19 @@
       var people = state.boot.people.map(function (p) { return p.name; }).filter(function (n) { return exclude.indexOf(n) === -1 || selected.indexOf(n) > -1; });
       selected.forEach(function (n) { if (people.indexOf(n) === -1) people.push(n); });
       people.sort(function (a, b) { return (selected.indexOf(b) > -1) - (selected.indexOf(a) > -1) || a.localeCompare(b, 'th'); });
-      return '<div class="field full"><span class="field-label">สำเนาถึง (CC) <span class="hint">(ไม่บังคับ · เช่น หัวหน้างาน หรือคนที่เกี่ยวข้อง · ดูงานได้อย่างเดียว และได้รับแจ้งเตือนเมื่อสร้างงาน ส่งตรวจ ผลการตรวจ และยกเลิก)</span></span>' +
+      return '<div class="field full"><details class="cc-pick" id="' + pre + 'CcBox"><summary><span class="field-label" style="display:inline">สำเนาถึง (CC)</span> ' +
+        '<span class="cc-sum" id="' + pre + 'CcSum">' + ccSummary(selected) + '</span></summary>' +
+        '<div class="hint" style="margin:6px 0">ไม่บังคับ · เช่น หัวหน้างาน หรือคนที่เกี่ยวข้อง · ดูงานได้อย่างเดียว และได้รับแจ้งเตือนเมื่อสร้างงาน ส่งตรวจ ผลการตรวจ และยกเลิก</div>' +
         '<input class="input cc-search" id="' + pre + 'CcQ" type="search" placeholder="ค้นหาชื่อ…" autocomplete="off" style="margin-bottom:6px">' +
         '<div class="chips" id="' + pre + 'Cc">' + people.map(function (n) {
           return '<label class="chip"><input type="checkbox" value="' + esc(n) + '"' + (selected.indexOf(n) > -1 ? ' checked' : '') + '>' + esc(n) + '</label>';
-        }).join('') + '</div></div>';
+        }).join('') + '</div></details></div>';
     }
+    function ccSummary(list) { return list.length ? esc(list.join(', ')) : '<span class="muted">ไม่มี — กดเพื่อเลือก</span>'; }
     function bindCcSearch(pre) {
       var q = $('#' + pre + 'CcQ'); if (!q) return;
+      $('#' + pre + 'Cc').addEventListener('change', function () { $('#' + pre + 'CcSum').innerHTML = ccSummary(checkedValues(pre + 'Cc')); });
+      $('#' + pre + 'CcBox').addEventListener('toggle', function () { if (this.open) q.focus(); });
       q.addEventListener('input', function () {
         var v = q.value.trim().toLowerCase();
         $$('#' + pre + 'Cc .chip').forEach(function (c) { var inp = c.querySelector('input'); c.hidden = !!v && !inp.checked && c.textContent.toLowerCase().indexOf(v) === -1; });
