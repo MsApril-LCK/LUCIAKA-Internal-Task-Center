@@ -655,6 +655,33 @@
     .tl-dot.t-approve { background: var(--brand-green); } .tl-dot.t-cancel { background: #9AA0A6; } .tl-dot.t-comment { background: var(--info); } .tl-dot.t-create { background: var(--brand-orange); }
     .tl-head { font-size: 13px; color: var(--text-muted); }
     .tl-head strong { color: var(--text); }
+    /* ไฟล์แนบ */
+    .attach-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+    .attach-btn { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .attach-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .attach-item { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 13px; }
+    .attach-item img, .attach-item .att-ico { width: 36px; height: 36px; flex: none; border-radius: 6px; object-fit: cover; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
+    .attach-item .att-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .attach-item .att-meta { color: var(--text-muted); white-space: nowrap; }
+    .attach-item.up .att-meta { color: var(--brand-orange); }
+    .attach-item.ok .att-meta { color: var(--brand-green); }
+    .attach-item.err { border-color: var(--danger); }
+    .attach-item.err .att-meta { color: var(--danger); white-space: normal; }
+    .att-group { margin: 4px 0 14px; }
+    .att-head { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+    .att-grid { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+    .att-thumb { width: 132px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: var(--text); font-size: 12px; }
+    .att-thumb img { width: 132px; height: 100px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-2); }
+    .att-thumb.att-noimg::before { content: 'ดูรูป'; display: flex; align-items: center; justify-content: center; width: 132px; height: 100px; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: var(--surface-2); color: var(--text-muted); }
+    .att-thumb span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .att-file { display: flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); text-decoration: none; color: var(--text); font-size: 13px; }
+    .att-file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+    .att-file small { color: var(--text-muted); }
+    .att-file:hover, .att-thumb:hover span { color: var(--brand-green); }
+    .text-link { color: var(--brand-green); text-decoration: underline; word-break: break-all; }
+    .text-link:hover { color: var(--brand-orange); }
+    .link-preview { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 6px; font-size: 13px; }
+    .link-preview a { word-break: break-all; }
     .tl-body { white-space: pre-line; margin-top: 2px; font-size: 14px; }
     .tl-link { font-size: 13px; word-break: break-all; }
 
@@ -716,6 +743,8 @@
     <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 16.5h-19z"/><path d="M12 10v4M12 17v.5"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 10"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
     <symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></symbol>
     <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
@@ -835,7 +864,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-13-17"></script>
+  <script src="config.js?v=2026-10-17-2"></script>
   <script>
   /* Firebase (แจ้งเตือนเข้ามือถือ) — ค่าสาธารณะ ไม่ใช่ข้อมูลลับ */
   window.ITC_FCM = {
@@ -1016,6 +1045,117 @@
     function linksField(id, label, value, extra) {
       return '<label for="' + id + '">' + label + ' <span class="hint">(หลายลิงก์ได้ · บรรทัดละ 1 ลิงก์)</span></label>' +
         '<textarea class="textarea" id="' + id + '" rows="2" inputmode="url" style="min-height:58px" placeholder="https://…&#10;https://…"' + (extra || '') + '>' + esc(value || '') + '</textarea>';
+    }
+    /** ข้อความธรรมดา → HTML ที่ลิงก์ http(s) กดได้ (escape ทุกส่วน ตัดเครื่องหมายวรรคตอนท้ายลิงก์ออก) */
+    function linkifyText(v) {
+      return String(v == null ? '' : v).split(/(https?:\/\/[^\s<>"'\u0E00-\u0E7F]+)/i).map(function (part, i) {
+        if (i % 2 === 0) return esc(part);
+        var m = part.match(/^(.*?)([.,;:!?)\]}\u0E2F\u0E46]*)$/), u = m[1], tail = m[2];
+        if (!isSafeUrl(u) || u.length < 12) return esc(part);
+        return '<a class="text-link" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + esc(u) + '</a>' + esc(tail);
+      }).join('');
+    }
+    /** ฟอร์มสร้างงาน: แสดงลิงก์ที่พิมพ์ในรายละเอียดให้กดตรวจได้ทันที */
+    function detailLinksPreview(v) {
+      var list = (String(v || '').match(/https?:\/\/[^\s<>"'\u0E00-\u0E7F]+/gi) || []).map(function (u) { return u.replace(/[.,;:!?)\]}\u0E2F\u0E46]+$/, ''); }).filter(isSafeUrl);
+      list = list.filter(function (u, i) { return list.indexOf(u) === i; }).slice(0, 10);
+      return list.length ? '<span class="hint">ลิงก์ในรายละเอียด (กดเพื่อตรวจว่าเปิดได้):</span>' + list.map(linkHtml).join('') : '';
+    }
+    /* ---------------- ไฟล์แนบ (เก็บใน Google Drive · ทุกคนที่มีลิงก์ดูได้) ---------------- */
+    var ATTACH_MAX = 10 * 1024 * 1024, ATTACH_PER = 5;
+    var ATTACH_HINT = 'รูป PDF Word Excel ฯลฯ · ไม่เกิน 10 MB ต่อไฟล์ · สูงสุด ' + ATTACH_PER + ' ไฟล์';
+    function fmtSize(n) { n = Number(n) || 0; return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+    function attachFieldHtml(key, label) {
+      return '<div class="field full attach-field"><label>' + label + '</label><div class="attach-row">' +
+        '<label class="btn btn-sm attach-btn">' + icon('clip') + 'แนบไฟล์<input type="file" id="' + key + 'File" multiple hidden></label>' +
+        '<span class="hint">' + ATTACH_HINT + '</span></div><ul class="attach-list" id="' + key + 'List"></ul></div>';
+    }
+    /** รูปใหญ่ → ย่อด้านยาวเหลือ 2000px (JPEG) ก่อนอัปโหลด · ไฟล์อื่นส่งตามเดิม */
+    function prepareFile(file) {
+      var isImg = /^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type || '');
+      var shrink = isImg && file.size > 1.5 * 1048576 && window.createImageBitmap ? createImageBitmap(file).then(function (bmp) {
+        var k = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
+        var c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+        var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+        return new Promise(function (res) { c.toBlob(function (b) { res(b && b.size < file.size ? b : null); }, 'image/jpeg', 0.85); });
+      }).catch(function () { return null; }) : Promise.resolve(null);
+      return shrink.then(function (small) {
+        var blob = small || file;
+        var name = small ? String(file.name || 'รูป').replace(/\.[A-Za-z0-9]{1,8}$/, '') + '.jpg' : (file.name || 'ไฟล์แนบ');
+        return new Promise(function (res, rej) {
+          var r = new FileReader();
+          r.onload = function () { var s = String(r.result || ''); res({ name: name, mime: blob.type || file.type || '', size: blob.size, data: s.slice(s.indexOf(',') + 1) }); };
+          r.onerror = function () { rej(new Error('อ่านไฟล์ไม่ได้')); };
+          r.readAsDataURL(blob);
+        });
+      });
+    }
+    /** ช่องแนบไฟล์ในฟอร์ม — อัปโหลดทันทีที่เลือก · ตอนกดบันทึกส่งเฉพาะรหัสไฟล์ */
+    function setupAttach(key, purpose, taskId) {
+      var input = $('#' + key + 'File'), list = $('#' + key + 'List'), items = [];
+      if (!input || !list) return { ids: function () { return []; }, problem: function () { return ''; } };
+      function draw() {
+        list.innerHTML = items.map(function (it, i) {
+          return '<li class="attach-item ' + it.status + '">' +
+            (it.thumb ? '<img src="' + esc(it.thumb) + '" alt="">' : '<span class="att-ico">' + icon('file') + '</span>') +
+            '<span class="att-name" title="' + esc(it.name) + '">' + esc(it.name) + '</span>' +
+            '<span class="att-meta">' + (it.status === 'up' ? 'กำลังอัปโหลด…' : it.status === 'ok' ? '✓ ' + fmtSize(it.size) : esc(it.err)) + '</span>' +
+            '<button class="btn btn-icon" type="button" data-rm="' + i + '" title="เอาออก" aria-label="เอาไฟล์นี้ออก">' + icon('x') + '</button></li>';
+        }).join('');
+      }
+      function add(file) {
+        if (items.length >= ATTACH_PER) { toast('แนบได้ครั้งละไม่เกิน ' + ATTACH_PER + ' ไฟล์'); return; }
+        var it = { name: file.name || 'ไฟล์แนบ', size: file.size, status: 'up', thumb: /^image\/(jpeg|png|webp|gif)$/i.test(file.type || '') ? URL.createObjectURL(file) : '' };
+        items.push(it); draw();
+        prepareFile(file).then(function (p) {
+          if (p.size > ATTACH_MAX) throw new Error('ใหญ่เกิน 10 MB (' + fmtSize(p.size) + ')');
+          it.size = p.size;
+          return callAuthed('uploadAttachment', { purpose: purpose, taskId: taskId || '', name: p.name, mime: p.mime, data: p.data });
+        }).then(function (r) { it.id = r.id; it.status = 'ok'; draw(); })
+          .catch(function (e) { if (e && e.message === 'stale') return; it.status = 'err'; it.err = 'ไม่สำเร็จ: ' + cleanError(e); draw(); });
+      }
+      input.addEventListener('change', function () { var fs = Array.prototype.slice.call(input.files || []); input.value = ''; fs.forEach(add); });
+      list.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-rm]'); if (!b || state.modalBusy) return;
+        items.splice(Number(b.getAttribute('data-rm')), 1); draw();
+      });
+      return {
+        ids: function () { return items.filter(function (i) { return i.status === 'ok'; }).map(function (i) { return i.id; }); },
+        problem: function () {
+          if (items.some(function (i) { return i.status === 'up'; })) return 'รอให้ไฟล์แนบอัปโหลดเสร็จก่อน แล้วกดอีกครั้ง';
+          if (items.some(function (i) { return i.status === 'err'; })) return 'มีไฟล์แนบที่อัปโหลดไม่สำเร็จ — กด ✕ เอาออก แล้วแนบใหม่';
+          return '';
+        }
+      };
+    }
+    // รูปย่อจาก Drive โหลดไม่ได้ (เช่น เน็ตบล็อก) → แสดงเป็นไอคอนไฟล์แทน กดเปิดได้เหมือนเดิม
+    document.addEventListener('error', function (e) {
+      var img = e.target; if (!img || img.tagName !== 'IMG' || !img.parentNode || !img.parentNode.classList || !img.parentNode.classList.contains('att-thumb')) return;
+      img.parentNode.classList.add('att-noimg'); img.remove();
+    }, true);
+    function taskAttachments(t) { try { var a = JSON.parse(t.attachments || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+    var ATT_STAGE = { create: 'แนบตอนสร้างงาน', submit: 'แนบตอนส่งตรวจ', revise: 'แนบตอนขอแก้ไข', approve: 'แนบตอนตรวจรับ' };
+    function attachmentsHtml(t) {
+      var groups = [];
+      taskAttachments(t).forEach(function (a) {
+        if (!a || !/^[A-Za-z0-9_-]{20,100}$/.test(a.id || '')) return;
+        var k = (a.st || '') + '|' + (a.r || 0) + '|' + (a.b || '');
+        var g = groups.filter(function (x) { return x.k === k; })[0];
+        if (!g) { g = { k: k, a: a, list: [] }; groups.push(g); }
+        g.list.push(a);
+      });
+      if (!groups.length) return '';
+      return '<h3 class="section-title">' + icon('clip') + ' ไฟล์แนบ</h3>' + groups.map(function (g) {
+        var a = g.a;
+        return '<div class="att-group"><div class="att-head">' + esc(ATT_STAGE[a.st] || 'ไฟล์แนบ') + (a.r ? ' รอบที่ ' + esc(a.r) : '') + ' · ' + esc(a.b || '') + (a.t ? ' · ' + esc(thaiDateTime(a.t)) : '') + '</div>' +
+          '<div class="att-grid">' + g.list.map(function (f) {
+            var url = 'https://drive.google.com/file/d/' + f.id + '/view';
+            if (/^image\//i.test(f.m || '')) {
+              return '<a class="att-thumb" href="' + url + '" target="_blank" rel="noopener noreferrer" title="' + esc(f.n) + '"><img loading="lazy" src="https://drive.google.com/thumbnail?id=' + f.id + '&amp;sz=w400" alt="' + esc(f.n) + '"><span>' + esc(f.n) + '</span></a>';
+            }
+            return '<a class="att-file" href="' + url + '" target="_blank" rel="noopener noreferrer" title="' + esc(f.n) + '">' + icon('file') + '<span>' + esc(f.n) + '</span><small>' + fmtSize(f.s) + '</small></a>';
+          }).join('') + '</div></div>';
+      }).join('');
     }
     function linkHtml(u) { return isSafeUrl(u) ? '<a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer">' + icon('link') + ' ' + esc(u) + '</a>' : esc(u); }
     function uuid() {
@@ -2472,8 +2612,9 @@
           (slaResult(t) ? infoItem('ผลการส่งตาม SLA', slaPill(t) + '<div class="task-meta">ส่งครั้งแรก ' + esc(thaiDateTime(firstSubmitAt(t))) + '</div>') : '') +
           infoItem('แก้ไขล่าสุด', esc(edited)) +
         '</div>' +
-        '<h3 class="section-title">โจทย์ / รายละเอียดงาน</h3><div class="detail-text">' + (t.detail ? esc(t.detail) : '<span class="muted">ไม่มีรายละเอียดเพิ่มเติม</span>') + '</div>' +
-        (t.note ? '<h3 class="section-title">หมายเหตุ</h3><div class="detail-text">' + esc(t.note) + '</div>' : '') +
+        '<h3 class="section-title">โจทย์ / รายละเอียดงาน</h3><div class="detail-text">' + (t.detail ? linkifyText(t.detail) : '<span class="muted">ไม่มีรายละเอียดเพิ่มเติม</span>') + '</div>' +
+        (t.note ? '<h3 class="section-title">หมายเหตุ</h3><div class="detail-text">' + linkifyText(t.note) + '</div>' : '') +
+        attachmentsHtml(t) +
         '<div class="link-row"><h3 class="section-title" style="margin:0">ลิงก์ผลงาน</h3>' + (hasLinks(t.workLink) ? splitLinks(t.workLink).filter(isSafeUrl).map(linkHtml).join('') : '<span class="muted">ยังไม่มีลิงก์ผลงาน</span>') + '</div>' +
         (replyFirst ? updateSection : '') +
         reviewBox(t) + submitBox(t) + editBox(t) +
@@ -2496,6 +2637,7 @@
         (t.perms.canCancel ? ' · ถ้างานนี้ไม่ต้องทำต่อแล้ว (เช่น เปลี่ยนแผน) กด "ยกเลิกงาน" และระบุเหตุผล' : '') + '</div>' +
         '<div class="field"><label for="rvText">ความเห็นของผู้ตรวจ / สิ่งที่ต้องแก้ไข <span class="hint">(บังคับกรอกเมื่อขอแก้ไข)</span></label>' +
         '<textarea class="textarea" id="rvText" maxlength="2000" style="min-height:80px"></textarea></div>' +
+        attachFieldHtml('rvAtt', 'ไฟล์แนบ <span class="hint">(ไม่บังคับ เช่น ภาพจุดที่ต้องแก้)</span>') +
         '<div id="rvError"></div>' +
         '<div class="action-row">' + (t.perms.canCancel ? '<button class="btn btn-danger-outline" type="button" id="rvCancel">' + icon('x') + 'ยกเลิกงาน</button><span class="spacer"></span>' : '') +
         '<button class="btn btn-revise" type="button" id="rvRevise">ขอแก้ไข</button>' +
@@ -2512,6 +2654,7 @@
         '<div class="field"><label for="sbSummary">สรุปสิ่งที่ทำ <span class="req">*</span></label><textarea class="textarea" id="sbSummary" maxlength="2000" style="min-height:80px" placeholder="ทำอะไรไปแล้วบ้าง ผลลัพธ์คืออะไร' + (t.status === REVISE ? ' และแก้ไขตามที่ผู้ตรวจขออย่างไร' : '') + '"></textarea></div>' +
         '<div class="field">' + linksField('sbLink', 'ลิงก์ผลงาน / หลักฐาน', t.workLink) +
         '<span class="hint">แนบตามลักษณะงาน เช่น ไฟล์ Google Drive, เอกสาร, ภาพหน้าจอ</span></div>' +
+        attachFieldHtml('sbAtt', 'ไฟล์แนบผลงาน <span class="hint">(ไม่บังคับ)</span>') +
         (progressOf(t) === 100 ? '' : '<div class="callout callout-orange" id="sbFullBox" style="margin-bottom:12px"><div class="callout-title">' + icon('alert') + 'ความคืบหน้ายังไม่ครบ 100%</div>' +
           '<div class="callout-body">ตอนนี้ความคืบหน้าอยู่ที่ <b>' + (progressOf(t) == null ? 'ยังไม่ได้อัปเดต' : progressOf(t) + '%') + '</b> แต่การส่งตรวจหมายถึงงานเสร็จครบแล้ว' +
           '<label class="check-line" style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-weight:600"><input type="checkbox" id="sbFull" style="margin-top:3px"> งานเสร็จครบแล้ว — ปรับความคืบหน้าเป็น 100% และส่งตรวจ</label>' +
@@ -2647,12 +2790,13 @@
 
       // ตรวจงาน
       if (p.canReview) {
-        var rvReq = uuid();
+        var rvReq = uuid(), rvAtt = setupAttach('rvAtt', 'review', t.id);
         var review = function (decision, btn) {
           var fb = $('#rvText').value.trim();
           if (decision === 'revise' && !fb) { showError('#rvError', 'กรุณาระบุสิ่งที่ต้องแก้ไขก่อนกด "ขอแก้ไข"'); $('#rvText').focus(); return; }
+          if (rvAtt.problem()) { showError('#rvError', rvAtt.problem()); return; }
           runAction(btn, 'กำลังบันทึก…', '#rvError', function () {
-            return callAuthed('reviewTask', t.id, { requestId: rvReq, decision: decision, feedback: fb });
+            return callAuthed('reviewTask', t.id, { requestId: rvReq, decision: decision, feedback: fb, attachments: rvAtt.ids() });
           }, function (task) { after(task, decision === 'approve' ? 'รับงานแล้ว — ปิดงาน ' + task.id : 'ส่งกลับให้ผู้รับผิดชอบแก้ไขแล้ว'); });
         };
         $('#rvApprove').addEventListener('click', function () { review('approve', this); });
@@ -2662,7 +2806,7 @@
 
       // ส่งตรวจ
       if ($('#sbSend')) {
-        var sbReq = uuid();
+        var sbReq = uuid(), sbAtt = setupAttach('sbAtt', 'submit', t.id);
         $('#sbSend').addEventListener('click', function () {
           var summary = $('#sbSummary').value.trim(), link = $('#sbLink').value.trim();
           if (!summary) { showError('#sbError', 'กรุณาสรุปสิ่งที่ทำก่อนส่งตรวจ'); $('#sbSummary').focus(); return; }
@@ -2672,8 +2816,9 @@
             showError('#sbError', 'ความคืบหน้ายังไม่ครบ 100% ซึ่งไม่สัมพันธ์กับการส่งตรวจ — ถ้างานเสร็จแล้วให้ติ๊ก "งานเสร็จครบแล้ว" ก่อนกดส่งตรวจ');
             $('#sbFullBox').scrollIntoView({ block: 'center' }); full.focus(); return;
           }
+          if (sbAtt.problem()) { showError('#sbError', sbAtt.problem()); return; }
           runAction(this, 'กำลังส่งตรวจ…', '#sbError', function () {
-            return callAuthed('submitForReview', t.id, { requestId: sbReq, summary: summary, link: link, confirmFull: !!(full && full.checked) });
+            return callAuthed('submitForReview', t.id, { requestId: sbReq, summary: summary, link: link, confirmFull: !!(full && full.checked), attachments: sbAtt.ids() });
           }, function (task) { after(task, 'ส่งตรวจแล้ว — รอ ' + task.reviewer + ' ตรวจ'); });
         });
       }
@@ -2794,7 +2939,7 @@
         $('#historyBox').innerHTML = '<ul class="timeline">' + items.map(function (h) {
           return '<li class="tl-item"><span class="tl-dot ' + (HISTORY_DOT[h.type] || '') + '"></span>' +
             '<div class="tl-head"><strong>' + esc(h.type) + '</strong> · ' + esc(h.user) + ' · ' + esc(thaiDateTime(h.time)) + '</div>' +
-            (h.detail ? '<div class="tl-body">' + esc(h.detail) + '</div>' : '') +
+            (h.detail ? '<div class="tl-body">' + linkifyText(h.detail) + '</div>' : '') +
             (hasLinks(h.link) ? '<div class="tl-link">' + linksHtml(h.link) + '</div>' : '') + '</li>';
         }).join('') + '</ul>';
     }
@@ -2833,7 +2978,8 @@
       var body =
         '<form id="createForm" novalidate><div class="form-grid">' +
           '<div class="field full"><label for="cTitle">ชื่องาน <span class="req">*</span></label><input class="input" id="cTitle" maxlength="300" required></div>' +
-          '<div class="field full"><label for="cDetail">โจทย์ / รายละเอียด และผลลัพธ์ที่ต้องส่ง <span class="req">*</span></label><textarea class="textarea" id="cDetail" maxlength="3000" placeholder="งานที่ต้องทำ และผลลัพธ์/ไฟล์ที่ต้องส่ง"></textarea></div>' +
+          '<div class="field full"><label for="cDetail">โจทย์ / รายละเอียด และผลลัพธ์ที่ต้องส่ง <span class="req">*</span></label><textarea class="textarea" id="cDetail" maxlength="3000" placeholder="งานที่ต้องทำ และผลลัพธ์/ไฟล์ที่ต้องส่ง (วางลิงก์ได้ ระบบจะทำให้กดเปิดได้)"></textarea><div class="link-preview" id="cDetailLinks" hidden></div></div>' +
+          attachFieldHtml('cAtt', 'ไฟล์แนบ <span class="hint">(ไม่บังคับ)</span>') +
           '<div class="field"><label for="cTeam">ทีมที่รับงาน</label><select class="select" id="cTeam">' + options(state.boot.teams, presetTeam, '— ไม่ระบุทีม (มอบให้บุคคล) —') + '</select>' +
             '<span class="hint">มอบให้ทีมได้โดยยังไม่เลือกคน — หัวหน้าทีมจะระบุผู้รับผิดชอบเอง</span></div>' +
           '<div class="field"><label for="cPriority">ความสำคัญ <span class="req">*</span></label><select class="select" id="cPriority">' + options(state.boot.priorities, '', '— เลือกความสำคัญ —') + '</select></div>' +
@@ -2883,6 +3029,11 @@
       ['input', 'change'].forEach(function (ev) {      // แก้ช่องที่ขึ้นแดงแล้ว เอากรอบแดงออก
         $('#createForm').addEventListener(ev, function (e) { if (e.target && e.target.value) e.target.removeAttribute('aria-invalid'); });
       });
+      var cAtt = setupAttach('cAtt', 'create', '');
+      $('#cDetail').addEventListener('input', function () {   // ลิงก์ในรายละเอียด → แสดงให้กดตรวจได้ใต้ช่อง
+        var box = $('#cDetailLinks'), h = detailLinksPreview(this.value);
+        box.innerHTML = h; box.hidden = !h;
+      });
       $('#createForm').addEventListener('submit', function (e) {
         e.preventDefault();
         if (state.modalBusy) return;           // กันกดซ้ำระหว่างรอ
@@ -2916,7 +3067,9 @@
         if (!data.team && !data.owners.length) errs.push('กรุณาเลือกทีมที่รับงาน หรือผู้รับผิดชอบอย่างน้อย 1 คน');
         if (data.reviewer && data.owners.indexOf(data.reviewer) > -1) errs.push('ผู้ตรวจงานต้องไม่ใช่ผู้รับผิดชอบ');
         if (data.startDate && data.dueDate && data.dueDate < data.startDate) errs.push('กำหนดส่งต้องไม่ก่อนวันที่เริ่ม');
+        if (cAtt.problem()) errs.push(cAtt.problem());
         if (errs.length) { showError('#cError', errs.join('\n')); return; }
+        data.attachments = cAtt.ids();
         runAction($('#cSubmit'), 'กำลังบันทึก…', '#cError', function () { return callAuthed('createTask', data); }, function (task) {
           setTask(task);
           closeModal(true);
