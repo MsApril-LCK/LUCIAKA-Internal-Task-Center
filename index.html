@@ -655,6 +655,7 @@
     .tl-dot.t-approve { background: var(--brand-green); } .tl-dot.t-cancel { background: #9AA0A6; } .tl-dot.t-comment { background: var(--info); } .tl-dot.t-create { background: var(--brand-orange); }
     .tl-head { font-size: 13px; color: var(--text-muted); }
     .tl-head strong { color: var(--text); }
+    .tag-mini.cc { background: #EAF2FF; color: #1F4E9C; border-color: #C9DBFB; }
     /* ไฟล์แนบ */
     .attach-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
     .attach-btn { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -814,6 +815,7 @@
         <button class="nav-item" data-view="assigned" type="button"><svg class="icon"><use href="#i-send"/></svg><span class="nav-text">งานที่ฉันมอบหมาย</span><span class="nav-badge" id="badgeAssigned" hidden></span></button>
         <button class="nav-item" data-view="review" type="button"><svg class="icon"><use href="#i-review"/></svg><span class="nav-text">งานรอตรวจ</span><span class="nav-badge" id="badgeReview" hidden></span></button>
         <button class="nav-item" data-view="toassign" type="button" hidden><svg class="icon"><use href="#i-users"/></svg><span class="nav-text">งานรอมอบหมาย</span><span class="nav-badge" id="badgeAssign" hidden></span></button>
+        <button class="nav-item" data-view="cc" type="button" hidden><svg class="icon"><use href="#i-inbox"/></svg><span class="nav-text">งานที่ CC ถึงฉัน</span></button>
         <button class="nav-item" data-view="all" type="button"><svg class="icon"><use href="#i-list"/></svg><span class="nav-text">รายการงานทั้งหมด</span></button>
         <div class="nav-sep" id="navSettingsSep" hidden></div>
         <button class="nav-item" data-view="settings" type="button" hidden><svg class="icon"><use href="#i-gear"/></svg><span class="nav-text">ตั้งค่าระบบ</span></button>
@@ -864,7 +866,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-17-2"></script>
+  <script src="config.js?v=2026-10-17-5"></script>
   <script>
   /* Firebase (แจ้งเตือนเข้ามือถือ) — ค่าสาธารณะ ไม่ใช่ข้อมูลลับ */
   window.ITC_FCM = {
@@ -914,18 +916,19 @@
       assigned: { title: 'งานที่ฉันมอบหมาย', sub: 'ติดตามผู้รับผิดชอบ ความคืบหน้า และกำหนดส่งของงานที่คุณสั่ง' },
       review: { title: 'งานรอตรวจ', sub: 'งานที่ส่งมาให้คุณตรวจ และคำถามขอความเห็นที่รอคุณตอบ' },
       toassign: { title: 'งานรอมอบหมาย', sub: 'งานที่มอบให้ทีมของคุณ แต่ยังไม่ระบุผู้รับผิดชอบ — เลือกลูกทีมที่จะทำงาน' },
+      cc: { title: 'งานที่ CC ถึงฉัน', sub: 'งานที่มีคนส่งสำเนา (CC) ถึงคุณ ดูได้อย่างเดียว · แจ้งเตือนเมื่อสร้างงาน ส่งตรวจ ผลการตรวจ และยกเลิกงาน' },
       all: { title: 'รายการงานทั้งหมด', sub: 'ค้นหาและกรองงานทั้งหมดที่คุณมีสิทธิ์เห็น' },
       settings: { title: 'ตั้งค่าระบบ', sub: 'จัดการพนักงาน ทีม และสิทธิ์ (เฉพาะผู้ดูแลระบบ)' }
     };
 
     function freshListFilter(view) {
-      return { q: '', team: '', owner: '', assigner: '', status: OPEN_FILTER, priority: '', overdue: false, soon: false, unassigned: false, unreadOnly: false, newOnly: false, sort: savedSort(view) };
+      return { q: '', team: '', owner: '', assigner: '', status: OPEN_FILTER, priority: '', overdue: false, soon: false, unassigned: false, unreadOnly: false, newOnly: false, ccOnly: false, sort: savedSort(view) };
     }
     /** การเรียงที่ผู้ใช้เลือกไว้ (จำในเครื่องนี้) */
     var SORTS = [['due', 'กำหนดส่งใกล้สุดก่อน'], ['new', 'งานใหม่ล่าสุดก่อน'], ['update', 'อัปเดตล่าสุดก่อน']];
     // งานของฉัน: ค่าเริ่มต้น = งานใหม่ล่าสุดก่อน (จำแยกจากหน้าอื่น) · หน้าอื่น: กำหนดส่งใกล้สุดก่อน
-    function sortKey(view) { return view === 'mine' ? 'itc_sort_mine' : 'itc_sort'; }
-    function savedSort(view) { var def = view === 'mine' ? 'new' : 'due'; try { var v = localStorage.getItem(sortKey(view)); return SORTS.some(function (x) { return x[0] === v; }) ? v : def; } catch (e) { return def; } }
+    function sortKey(view) { return view === 'mine' ? 'itc_sort_mine' : view === 'cc' ? 'itc_sort_cc' : 'itc_sort'; }
+    function savedSort(view) { var def = view === 'mine' ? 'new' : view === 'cc' ? 'update' : 'due'; try { var v = localStorage.getItem(sortKey(view)); return SORTS.some(function (x) { return x[0] === v; }) ? v : def; } catch (e) { return def; } }
     function saveSort(v, view) { try { localStorage.setItem(sortKey(view), v); } catch (e) { /* ไม่เป็นไร */ } }
     var REVIEW_SORTS = [['wait', 'รอตรวจนานสุดก่อน'], ['sent', 'ส่งมาล่าสุดก่อน'], ['due', 'กำหนดส่งใกล้สุดก่อน']];
     var REVIEW_WAITS = [['', 'ทั้งหมด'], ['warn', 'รอเกิน 3 วันทำการ'], ['late', 'รอเกิน 5 วันทำการ'], ['ask', 'เฉพาะคำถามขอความเห็น']];
@@ -950,7 +953,7 @@
     function freshFilters() {
       return {
         dashboard: { tab: 'overall', person: '', team: '', status: OPEN_FILTER },
-        mine: freshListFilter('mine'), assigned: freshListFilter('assigned'), all: freshListFilter('all'),
+        mine: freshListFilter('mine'), assigned: freshListFilter('assigned'), all: freshListFilter('all'), cc: freshListFilter('cc'),
         review: { q: '', sort: 'wait', wait: '' },
         toassign: { q: '' },
         report: { assigner: '', team: '' }
@@ -1187,6 +1190,34 @@
     function isPrivateTask(t) { return t.private === 'ใช่'; }
     function privateTag() { return '<span class="tag-private" title="เห็นเฉพาะผู้มอบหมาย ผู้รับผิดชอบ ผู้ตรวจ และผู้ดูแลระบบ">' + icon('lock') + 'งานส่วนตัว</span>'; }
     function involvesMe(t) { var i = (t.perms && t.perms.involvement) || {}; return !!(i.owner || i.assigner || i.reviewer || i.delegate); }
+    /* ---------------- สำเนาถึง (CC): ดูได้อย่างเดียว + ได้รับแจ้งเตือนเหตุการณ์สำคัญ ---------------- */
+    function ccOf(t) { return String((t && t.cc) || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); }
+    function hasCcTasks() { return (state.tasks || []).some(isCcMe); }
+    function isCcMe(t) { return !!(t.perms && t.perms.involvement && t.perms.involvement.cc); }
+    /** งานที่เห็นเพราะถูก CC อย่างเดียว — ไม่นับใน Dashboard / รายงานผลงาน / ตัวเลขของฉัน แสดงเฉพาะในรายการงานทั้งหมด */
+    function ccOnlyTask(t) {
+      var i = (t.perms && t.perms.involvement) || {};
+      return !!i.cc && !(i.owner || i.assigner || i.reviewer || i.delegate || i.forPrincipal) && !seesAll() && !(headScoped() && isMyTeamTask(t));
+    }
+    function ccTag() { return '<span class="tag-mini cc" title="คุณได้รับสำเนา (CC) งานนี้ ดูได้อย่างเดียว">CC ถึงฉัน</span>'; }
+    function ccPickerHtml(pre, selected, exclude) {
+      selected = selected || []; exclude = exclude || [];
+      var people = state.boot.people.map(function (p) { return p.name; }).filter(function (n) { return exclude.indexOf(n) === -1 || selected.indexOf(n) > -1; });
+      selected.forEach(function (n) { if (people.indexOf(n) === -1) people.push(n); });
+      people.sort(function (a, b) { return (selected.indexOf(b) > -1) - (selected.indexOf(a) > -1) || a.localeCompare(b, 'th'); });
+      return '<div class="field full"><span class="field-label">สำเนาถึง (CC) <span class="hint">(ไม่บังคับ · เช่น หัวหน้างาน หรือคนที่เกี่ยวข้อง · ดูงานได้อย่างเดียว และได้รับแจ้งเตือนเมื่อสร้างงาน ส่งตรวจ ผลการตรวจ และยกเลิก)</span></span>' +
+        '<input class="input cc-search" id="' + pre + 'CcQ" type="search" placeholder="ค้นหาชื่อ…" autocomplete="off" style="margin-bottom:6px">' +
+        '<div class="chips" id="' + pre + 'Cc">' + people.map(function (n) {
+          return '<label class="chip"><input type="checkbox" value="' + esc(n) + '"' + (selected.indexOf(n) > -1 ? ' checked' : '') + '>' + esc(n) + '</label>';
+        }).join('') + '</div></div>';
+    }
+    function bindCcSearch(pre) {
+      var q = $('#' + pre + 'CcQ'); if (!q) return;
+      q.addEventListener('input', function () {
+        var v = q.value.trim().toLowerCase();
+        $$('#' + pre + 'Cc .chip').forEach(function (c) { var inp = c.querySelector('input'); c.hidden = !!v && !inp.checked && c.textContent.toLowerCase().indexOf(v) === -1; });
+      });
+    }
     /** รายการงานทั้งหมด: ผู้บริหาร/ผู้ดูแลระบบ = ทุกงาน · หัวหน้าฝ่าย = งานของตัวเอง + งานของลูกทีม · พนักงาน = งานของตัวเอง */
     function allListScope(t) { return seesAll() || involvesMe(t) || (headScoped() && isMyTeamTask(t)); }
     function findTask(id) { return state.tasks.filter(function (x) { return x.id === id; })[0] || null; }
@@ -1406,7 +1437,7 @@
       var d = taskDateFor(t, state.period.basis);
       return !!d && d >= r.from && d <= r.to;
     }
-    function periodTasks() { return state.tasks.filter(inPeriod); }
+    function periodTasks() { return state.tasks.filter(function (t) { return inPeriod(t) && !ccOnlyTask(t); }); }
     function periodYears() {
       var y = +todayStr().slice(0, 4), min = y;
       state.tasks.forEach(function (t) { var d = assignedDate(t) || t.dueDate; if (d) min = Math.min(min, +d.slice(0, 4)); });
@@ -1482,6 +1513,7 @@
     function allowedViews() {
       var v = ['dashboard', 'report', 'mine', 'checklist', 'assigned', 'review'];
       if (hasAssignQueue()) v.push('toassign');
+      if (hasCcTasks()) v.push('cc');
       v.push('all');
       if (isAdmin()) v.push('settings');
       return v;
@@ -1528,6 +1560,7 @@
     function myRevisions() { return state.tasks.filter(function (t) { return t.status === REVISE && t.perms && t.perms.involvement.owner; }); }
 
     function updateBadges() {
+      var ccNav = $('.nav-item[data-view="cc"]'); if (ccNav) ccNav.hidden = !hasCcTasks();   // เมนู CC ขึ้นเฉพาะคนที่มีงาน CC ถึง (ไม่มีตัวเลข — ไม่ใช่งานที่ต้องทำ)
       var r = reviewInbox().length;
       var mineAttn = state.tasks.filter(function (t) { return t.perms && t.perms.involvement.owner && (t.status === REVISE || t.unread || ownerTurn(t)); });
       var m = mineAttn.length;
@@ -1729,6 +1762,7 @@
       if (t.status === REVISE) tags.unshift('<span class="tag-mini warn">ต้องแก้ไข' + (t.submitRound ? ' (รอบ ' + t.submitRound + ')' : '') + '</span>');
       if (t.sla) tags.push(slaTag(t.sla));
       if (isPrivateTask(t)) tags.unshift(privateTag());
+      if (ccOnlyTask(t)) tags.unshift(ccTag());
       if (isNewTask(t)) tags.unshift('<span class="tag-new" title="มอบหมายเมื่อ ' + esc(timeAgo(assignedAt(t))) + '">ใหม่</span>');
       var inv0 = t.perms && t.perms.involvement;
       if (askPending(t) && isAskTarget(t)) tags.unshift('<span class="tag-ask">' + icon('chat') + 'ขอความเห็น</span>');
@@ -1802,7 +1836,8 @@
       if (view === 'assigned') return periodTasks().filter(function (t) { return t.perms.involvement.assigner; });
       if (view === 'review') return reviewInbox();
       if (view === 'toassign') return assignQueue();
-      return periodTasks().filter(allListScope);
+      if (view === 'cc') return state.tasks.filter(function (t) { return inPeriod(t) && isCcMe(t); });
+      return periodTasks().filter(allListScope).concat(state.tasks.filter(function (t) { return inPeriod(t) && ccOnlyTask(t); }));
     }
     function applyListFilter(list, f) {
       var q = (f.q || '').toLowerCase();
@@ -1816,6 +1851,7 @@
         if (f.soon && dueInfo(t).kind !== 'soon') return false;
         if (f.unassigned && !(isUnassigned(t) && !isFinal(t))) return false;
         if (f.unreadOnly && !t.unread) return false;
+        if (f.ccOnly && !isCcMe(t)) return false;
         if (f.newOnly && !isNewTask(t)) return false;
         return statusMatch(t, f.status);
       });
@@ -2016,7 +2052,8 @@
       // งานของฉัน: ผู้รับผิดชอบคือเราเสมอ → ไม่แสดงช่องนี้ · งานที่ฉันมอบหมาย: ผู้มอบหมายคือเรา → ไม่แสดง และผู้รับผิดชอบเหลือเฉพาะคนที่เรามอบหมายให้
       // รายการงานทั้งหมด: ถ้ามีตัวเลือกคนเดียว (เช่น พนักงานที่เห็นแค่งานตัวเอง) → ไม่แสดง
       if (v === 'assigned') people = uniq([].concat.apply([], base.map(function (t) { return t.owners || []; })));
-      if (v === 'mine' || v === 'all') assigners = uniq(base.map(function (t) { return t.assigner; }).filter(Boolean));
+      if (v === 'mine' || v === 'all' || v === 'cc') assigners = uniq(base.map(function (t) { return t.assigner; }).filter(Boolean));
+      if (v === 'cc') people = uniq([].concat.apply([], base.map(function (t) { return t.owners || []; })));
       if (v === 'all') people = people.filter(function (n) { return base.some(function (t) { return (t.owners || []).indexOf(n) > -1; }); });
       var showOwner = v !== 'mine' && (v === 'assigned' || people.length > 1 || !!f.owner);
       var showAssigner = v !== 'assigned' && (assigners.length > 1 || !!f.assigner);
@@ -2034,7 +2071,8 @@
         done: base.filter(function (t) { return t.status === CLOSED; }).length,
         revise: base.filter(function (t) { return t.status === REVISE; }).length,
         unread: base.filter(function (t) { return t.unread; }).length,
-        fresh: base.filter(isNewTask).length
+        fresh: base.filter(isNewTask).length,
+        cc: base.filter(isCcMe).length
       };
       if (v === 'mine') html += '<div id="ckMine"></div>';
       html += '<div class="filters list-filters collapsible" role="search">' +
@@ -2097,7 +2135,7 @@
         if (key === cur) card.classList.add('active');
         var go = function () {
           var off = key === cur;
-          f.overdue = false; f.soon = false; f.unassigned = false; f.unreadOnly = false; f.newOnly = false;
+          f.overdue = false; f.soon = false; f.unassigned = false; f.unreadOnly = false; f.newOnly = false; f.ccOnly = false;
           f.status = OPEN_FILTER;
           if (!off) Object.assign(f, CARD_FILTER[key]);
           renderView();
@@ -2110,8 +2148,8 @@
     function renderListResults() {
       var v = state.view, f = state.filters[v];
       var list = applyListFilter(baseList(v), f);
-      var titles = { mine: 'งานที่ฉันรับผิดชอบ', assigned: 'งานที่ฉันมอบหมาย', all: 'รายการงานทั้งหมด' };
-      var empty = { mine: 'ไม่มีงานที่คุณรับผิดชอบตามเงื่อนไขนี้', assigned: 'ยังไม่มีงานที่คุณมอบหมายตามเงื่อนไขนี้ — กด "สร้างงาน" เพื่อเริ่ม', all: 'ไม่พบงานตามเงื่อนไขที่เลือก' };
+      var titles = { mine: 'งานที่ฉันรับผิดชอบ', assigned: 'งานที่ฉันมอบหมาย', all: 'รายการงานทั้งหมด', cc: 'งานที่ CC ถึงฉัน' };
+      var empty = { mine: 'ไม่มีงานที่คุณรับผิดชอบตามเงื่อนไขนี้', assigned: 'ยังไม่มีงานที่คุณมอบหมายตามเงื่อนไขนี้ — กด "สร้างงาน" เพื่อเริ่ม', all: 'ไม่พบงานตามเงื่อนไขที่เลือก', cc: 'ไม่มีงาน CC ถึงคุณตามเงื่อนไขนี้ — ดูงานที่เสร็จแล้วได้จากตัวกรองสถานะ' };
       var scope = f.soon ? ' (ใกล้ครบกำหนด)' : f.status === OPEN_FILTER ? ' (ยังไม่เสร็จ)' : f.status ? ' (' + f.status + ')' : '';
       var showSummary = v === 'assigned';      // งานของฉัน: ไม่แสดงการ์ดสถิติ (ดูที่ Dashboard) · รายการทั้งหมด: ไม่แสดง
       $('#results').innerHTML = (showSummary ? summaryHtml(baseList(v), true) : '') + tableHtml(list, v === 'assigned' ? LIST_COLUMNS.filter(function (k) { return k !== 'action'; }) : LIST_COLUMNS, titles[v] + scope, empty[v]); bindListCards();   // งานที่ฉันมอบหมาย: ไม่มีปุ่ม — กดที่แถวเพื่อเปิด
@@ -2592,7 +2630,9 @@
       var p = t.perms;
       // ถึงตาตอบ (ผู้รับผิดชอบตอบผู้ตรวจ / ผู้ตรวจตอบคำถาม) → ยกช่องตอบขึ้นไว้บนสุด
       var replyFirst = (p.involvement.owner && ownerTurn(t)) || (!p.involvement.owner && askPending(t) && isAskTarget(t));
-      var updateSection = '<h3 class="section-title" id="updateSec">' + (replyFirst ? 'ตอบกลับ' : 'อัปเดตความคืบหน้า / ความคิดเห็น') + '</h3>' + updateFormHtml(t);
+      var updateSection = p.canComment === false
+        ? '<div class="notice notice-info" style="margin-bottom:20px">คุณได้รับสำเนา (CC) งานนี้ — ดูรายละเอียด ไฟล์แนบ และประวัติได้ และจะได้รับแจ้งเตือนเมื่อส่งตรวจ มีผลการตรวจ หรือยกเลิกงาน (ไม่สามารถแก้ไขหรือแสดงความคิดเห็นได้)</div>'
+        : '<h3 class="section-title" id="updateSec">' + (replyFirst ? 'ตอบกลับ' : 'อัปเดตความคืบหน้า / ความคิดเห็น') + '</h3>' + updateFormHtml(t);
       var edited = t.lastEdited ? thaiDateTime(t.lastEdited) + (t.editedBy ? ' · ' + t.editedBy : '') : '—';
       var body =
         '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + pill(t.status) + prioHtml(t.priority) + (isPrivateTask(t) ? privateTag() : '') +
@@ -2607,6 +2647,7 @@
           infoItem('ผู้รับผิดชอบทั้งหมด', peopleHtml(t.owners)) +
           infoItem('ผู้มอบหมาย', personHtml(t.assigner)) +
           infoItem('ผู้ตรวจงาน', t.reviewer ? personHtml(t.reviewer) : '<span class="muted">ยังไม่ระบุ</span>') +
+          (ccOf(t).length ? infoItem('สำเนาถึง (CC)', '<div class="people">' + ccOf(t).map(personHtml).join('') + '</div>') : '') +
           infoItem('วันที่เริ่ม', t.startDate ? esc(thaiDate(t.startDate)) : '<span class="muted">—</span>') +
           infoItem('กำหนดส่ง', dueHtml(t)) +
           (slaResult(t) ? infoItem('ผลการส่งตาม SLA', slaPill(t) + '<div class="task-meta">ส่งครั้งแรก ' + esc(thaiDateTime(firstSubmitAt(t))) + '</div>') : '') +
@@ -2665,8 +2706,9 @@
 
     function editBox(t) {
       var p = t.perms;
-      var any = p.statuses.length || p.canEditNotes || p.canEditPriority || p.canEditTeam || p.canAssign || p.canSetReviewer;
+      var any = p.statuses.length || p.canEditNotes || p.canEditPriority || p.canEditTeam || p.canAssign || p.canSetReviewer || p.canEditCc;
       if (!any) {
+        if (p.canComment === false) return '';
         return '<div class="notice notice-info" style="margin-bottom:20px">' + esc(t.status === CLOSED ? 'งานนี้ตรวจรับและปิดแล้ว' : t.status === CANCELLED ? 'งานนี้ถูกยกเลิกแล้ว' : t.status === REVIEW ? 'งานนี้อยู่ระหว่างรอตรวจ — แก้ไขข้อมูลได้หลังผู้ตรวจรับงานหรือขอแก้ไข' : 'คุณดูงานนี้ได้อย่างเดียว แสดงความคิดเห็นได้ด้านล่าง') + '</div>';
       }
       var dis = function (ok) { return ok ? '' : ' disabled'; };
@@ -2691,6 +2733,7 @@
         html += '<div class="field full"><span class="field-label">ผู้รับผิดชอบ</span><div>' + peopleHtml(t.owners) + '</div>' +
           '<span class="hint">เปลี่ยนหรือเพิ่มผู้รับผิดชอบได้เฉพาะผู้มอบหมาย (' + esc(t.assigner || '—') + ') — ถ้าต้องการให้คนอื่นช่วย ให้ใช้ "ขอความเห็นผู้ตรวจ" หรือแจ้งผู้มอบหมาย</span></div>';
       }
+      if (p.canEditCc) html += ccPickerHtml('u', ccOf(t), (t.owners || []).concat([t.assigner]));
       html += '<div class="field full"><label for="uProblem">ปัญหา / Error</label><textarea class="textarea" id="uProblem" maxlength="1000" style="min-height:60px"' + dis(p.canEditNotes) + '>' + esc(t.problem) + '</textarea></div>' +
         '<div class="field full"><label for="uNote">หมายเหตุ</label><textarea class="textarea" id="uNote" maxlength="2000" style="min-height:60px"' + dis(p.canEditNotes) + '>' + esc(t.note) + '</textarea></div>' +
         '<div class="field full">' + linksField('uLink', 'ลิงก์ผลงาน', t.workLink, dis(p.canEditNotes)) + '</div>' +
@@ -2765,8 +2808,8 @@
         });
       });
       if ($('#cmProg')) $('#cmProg').addEventListener('input', function () { $('#cmProgVal').textContent = this.value + '%'; });
-      $('#cmText').addEventListener('input', function () { if (this.value.trim()) this.removeAttribute('aria-invalid'); });
-      $('#cmSend').addEventListener('click', function () {
+      if ($('#cmText')) $('#cmText').addEventListener('input', function () { if (this.value.trim()) this.removeAttribute('aria-invalid'); });
+      if ($('#cmSend')) $('#cmSend').addEventListener('click', function () {
         var text = $('#cmText').value.trim(), link = $('#cmLink').value.trim();
         var data = { requestId: cmReq, text: text, link: link, kind: kind };
         var pr = $('#cmProg');
@@ -2853,9 +2896,11 @@
           if (val('uNote') !== (t.note || '')) c.note = val('uNote');
           if ($('#uLink') && splitLinks(val('uLink')).join('\n') !== splitLinks(t.workLink).join('\n')) c.workLink = splitLinks(val('uLink')).join('\n');
         }
+        if ($('#uCc')) { var ccv = checkedValues('uCc'); if (ccv.slice().sort().join('|') !== ccOf(t).slice().sort().join('|')) c.cc = ccv; }
         return c;
       };
       bindSlaTime('u', function () { refresh(); });
+      bindCcSearch('u');
       var refresh = function () {
         if ($('#uStatus')) $('#uHint').textContent = WORKFLOW_HINT[$('#uStatus').value] || '';
         save.disabled = !Object.keys(changes()).length;
@@ -2986,6 +3031,7 @@
           '<div class="field full"><span class="field-label">ผู้รับผิดชอบ (เลือกได้หลายคน · ไม่บังคับถ้าเลือกทีมแล้ว)</span><div id="cOwnersWrap">' + createOwnersHtml(presetOwner ? [presetOwner] : [], presetTeam, false) + '</div></div>' +
           '<div class="field"><label for="cMain">ผู้รับผิดชอบหลัก</label><select class="select" id="cMain"></select></div>' +
           '<div class="field"><label for="cReviewer">ผู้ตรวจงาน</label><select class="select" id="cReviewer"></select><span class="hint">ค่าเริ่มต้นคือคุณ (ผู้มอบหมาย) · ต้องไม่ใช่ผู้รับผิดชอบ</span></div>' +
+          ccPickerHtml('c', [], [me().name]) +
           '<div class="field"><label for="cStart">วันที่เริ่ม</label><input class="input" id="cStart" type="date" value="' + todayStr() + '"></div>' +
           '<div class="field"><label for="cDue">วันที่กำหนดส่ง (Deadline) <span class="req">*</span></label><input class="input" id="cDue" type="date"></div>' +
           slaTimeFieldHtml('c', '', '') +
@@ -3030,6 +3076,7 @@
         $('#createForm').addEventListener(ev, function (e) { if (e.target && e.target.value) e.target.removeAttribute('aria-invalid'); });
       });
       var cAtt = setupAttach('cAtt', 'create', '');
+      bindCcSearch('c');
       $('#cDetail').addEventListener('input', function () {   // ลิงก์ในรายละเอียด → แสดงให้กดตรวจได้ใต้ช่อง
         var box = $('#cDetailLinks'), h = detailLinksPreview(this.value);
         box.innerHTML = h; box.hidden = !h;
@@ -3070,6 +3117,7 @@
         if (cAtt.problem()) errs.push(cAtt.problem());
         if (errs.length) { showError('#cError', errs.join('\n')); return; }
         data.attachments = cAtt.ids();
+        data.cc = checkedValues('cCc').filter(function (n) { return data.owners.indexOf(n) === -1; });
         runAction($('#cSubmit'), 'กำลังบันทึก…', '#cError', function () { return callAuthed('createTask', data); }, function (task) {
           setTask(task);
           closeModal(true);
