@@ -357,6 +357,83 @@
     .st-revision-required { background: var(--warning-soft); color: var(--warning); }
     .st-approved { background: var(--brand-green-soft); color: var(--brand-green); }
 
+    /* ---------------- ปฏิทินงาน ---------------- */
+    .cal-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .cal-bar .grow { flex: 1; }
+    .cal-bar .seg { margin-bottom: 0; flex-wrap: nowrap; }
+    .cal-bar .seg button { white-space: nowrap; }
+    .cal-nav { display: inline-flex; align-items: center; gap: 6px; }
+    .cal-nav .cal-title { font-size: 17px; font-weight: 700; min-width: 170px; text-align: center; }
+    .cal-nav .btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; }
+    .cal-opts { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 13.5px; }
+    .cal-opts .select { width: auto; min-width: 140px; }
+    .cal-opts label.chk { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+    .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+    .cal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .cal-head { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+    .cal-head div { padding: 8px 10px; font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .cal-day { min-height: 112px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 6px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; background: var(--surface); text-align: left; font: inherit; color: inherit; border-top: 0; border-left: 0; min-width: 0; }
+    .cal-day:nth-child(7n) { border-right: 0; }
+    .cal-day.out { background: #FAFBF9; color: var(--text-faint); }
+    .cal-day.wkend { background: #F7F8F5; }
+    .cal-day:hover { background: #F3F8F0; }
+    .cal-day.sel { box-shadow: inset 0 0 0 2px var(--brand-green); }
+    .cal-day:focus-visible { outline: 2px solid var(--brand-orange); outline-offset: -2px; }
+    .cal-dn { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .cal-dn b { min-width: 26px; height: 26px; border-radius: 13px; display: inline-flex; align-items: center; justify-content: center; }
+    .cal-day.today .cal-dn b { background: var(--brand-orange); color: #1C2418; }
+    .cal-dn .cal-n { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-left: auto; }
+    .cal-chip { display: block; font-size: 12px; line-height: 1.35; padding: 2px 6px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid transparent; text-decoration: none; }
+    .cal-chip.tone-cancel { text-decoration: line-through; }
+    .cal-chip.late { background: var(--danger-soft); color: var(--danger); border-left-color: var(--danger); font-weight: 600; }
+    .cal-more { font-size: 11.5px; color: var(--text-muted); font-weight: 600; padding-left: 4px; }
+    .cal-dots { display: none; gap: 3px; flex-wrap: wrap; }
+    .cal-dots i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+    .dot-neutral { background: var(--neutral); } .dot-info { background: var(--info); } .dot-review { background: var(--review); }
+    .dot-warning { background: var(--warning); } .dot-done { background: var(--brand-green); } .dot-danger { background: var(--danger); } .dot-cancel { background: #A9ADB3; }
+    .cal-side { position: sticky; top: 12px; }
+    .cal-side h3 { margin: 0; font-size: 16px; }
+    .cal-side .cal-side-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .cal-list { list-style: none; margin: 0; padding: 8px; display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow: auto; }
+    .cal-item { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--border); border-left: 4px solid var(--neutral); border-radius: 10px; background: var(--surface); cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
+    .cal-item:hover { background: #F7FAF5; }
+    .cal-item .ci-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--text-muted); }
+    .cal-item .ci-title { font-weight: 600; font-size: 14px; line-height: 1.4; word-break: break-word; }
+    .cal-item .ci-meta { font-size: 12.5px; color: var(--text-muted); }
+    .cal-item.b-neutral { border-left-color: var(--neutral); } .cal-item.b-info { border-left-color: var(--info); } .cal-item.b-review { border-left-color: var(--review); }
+    .cal-item.b-warning { border-left-color: var(--warning); } .cal-item.b-done { border-left-color: var(--brand-green); } .cal-item.b-danger { border-left-color: var(--danger); } .cal-item.b-cancel { border-left-color: #A9ADB3; }
+    .cal-empty { padding: 22px 12px; text-align: center; color: var(--text-muted); font-size: 13.5px; }
+    .cal-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    .cal-wcol { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; min-height: 420px; display: flex; flex-direction: column; min-width: 0; }
+    .cal-wcol.today { border: 2px solid var(--brand-orange); }
+    .cal-wcol.wkend { background: #F7F8F5; }
+    .cal-whead { padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 6px; }
+    .cal-whead b { font-size: 18px; }
+    .cal-whead span { font-size: 12px; color: var(--text-muted); }
+    .cal-wcol .cal-list { max-height: none; padding: 6px; gap: 6px; }
+    .cal-wcol .cal-item { padding: 7px 8px; }
+    .cal-wcol .cal-item .ci-title { font-size: 13px; }
+    .cal-wcol .ci-top { flex-wrap: wrap; } .cal-item .ci-top > span:first-child { white-space: nowrap; }
+    .cal-wcol .ci-team { display: none; }
+    .cal-opts .select { max-width: 240px; }
+    .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; font-size: 12px; color: var(--text-muted); align-items: center; }
+    .cal-legend span { display: inline-flex; gap: 6px; align-items: center; }
+    .cal-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+    @media (max-width: 1180px) { .cal-layout { grid-template-columns: minmax(0, 1fr); } .cal-side { position: static; } .cal-list { max-height: none; } }
+    @media (max-width: 1100px) { .cal-week { grid-template-columns: minmax(0, 1fr); } .cal-wcol { min-height: 0; } .cal-wcol .cal-empty { padding: 8px; text-align: left; } .cal-wcol .ci-team { display: inline; } }
+    @media (max-width: 760px) {
+      .cal-nav { width: 100%; justify-content: space-between; }
+      .cal-nav .cal-title { min-width: 0; font-size: 16px; }
+      .cal-day { min-height: 58px; padding: 4px; align-items: center; }
+      .cal-dn { justify-content: center; } .cal-dn .cal-n { display: none; }
+      .cal-day .cal-chip, .cal-day .cal-more { display: none; }
+      .cal-dots { display: flex; justify-content: center; }
+      .cal-head div { padding: 6px 2px; text-align: center; font-size: 11.5px; }
+      .cal-opts { width: 100%; } .cal-opts .select { flex: 1; min-width: 0; }
+      .cal-opts .seg { width: 100%; } .cal-opts .seg button { flex: 1; padding: 8px 6px; font-size: 13px; }
+    }
+
     .empty { padding: 44px 20px; text-align: center; color: var(--text-muted); }
     .empty .icon { width: 36px; height: 36px; color: var(--text-faint); margin-bottom: 6px; }
 
@@ -815,6 +892,7 @@
       <button class="btn btn-primary side-create" id="sideCreateBtn" type="button"><svg class="icon"><use href="#i-plus"/></svg>สร้างงาน</button>
       <nav class="nav">
         <button class="nav-item" data-view="dashboard" type="button"><svg class="icon"><use href="#i-grid"/></svg><span class="nav-text">Dashboard</span></button>
+        <button class="nav-item" data-view="calendar" type="button"><svg class="icon"><use href="#i-calendar"/></svg><span class="nav-text">ปฏิทินงาน</span></button>
         <button class="nav-item" data-view="report" type="button"><svg class="icon"><use href="#i-chart"/></svg><span class="nav-text">รายงานผลงาน</span></button>
         <button class="nav-item" data-view="mine" type="button"><svg class="icon"><use href="#i-user"/></svg><span class="nav-text">งานของฉัน</span><span class="nav-badge" id="badgeMine" hidden></span></button>
         <button class="nav-item" data-view="checklist" type="button"><svg class="icon"><use href="#i-checklist"/></svg><span class="nav-text">เช็กลิสต์ของฉัน</span><span class="nav-badge soft" id="badgeCheck" hidden></span></button>
@@ -872,7 +950,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-10-17-6"></script>
+  <script src="config.js?v=2026-11-23-4"></script>
   <script>
   /* Firebase (แจ้งเตือนเข้ามือถือ) — ค่าสาธารณะ ไม่ใช่ข้อมูลลับ */
   window.ITC_FCM = {
@@ -916,6 +994,7 @@
 
     var VIEWS = {
       dashboard: { title: 'Dashboard', sub: 'สถิติงานตามสิทธิ์ของคุณ' },
+      calendar: { title: 'ปฏิทินงาน', sub: 'ดูกำหนดส่งของงานเป็นรายเดือน / รายสัปดาห์ — ดึงจากงานที่มอบหมายไว้แล้ว ไม่ต้องกรอกซ้ำ' },
       report: { title: 'รายงานผลงาน', sub: 'จำนวนงานที่ได้รับ เสร็จ ตรงเวลา และค้าง แยกรายคน ตามช่วงเวลาที่เลือก' },
       mine: { title: 'งานของฉัน', sub: 'งานที่คุณเป็นผู้รับผิดชอบ รวมงานที่ต้องแก้ไข' },
       checklist: { title: 'เช็กลิสต์ของฉัน', sub: 'รายการส่วนตัว เห็นเฉพาะคุณ แยกจากงานที่มอบหมายกัน' },
@@ -1449,6 +1528,14 @@
       return !!d && d >= r.from && d <= r.to;
     }
     function periodTasks() { return state.tasks.filter(function (t) { return inPeriod(t) && !ccOnlyTask(t); }); }
+    /** งานที่เก็บถาวรแล้ว (ตัวเลขล้วน) — นับใน Dashboard / รายงานผลงาน แต่ไม่แสดงในรายการงาน ปฏิทิน หรือตัวเลขแจ้งเตือน */
+    function archivedTasks() { return (state.boot && state.boot.archivedTasks) || []; }
+    /** ชุดงานสำหรับนับสถิติ = งานในช่วงเวลา + งานเก็บถาวรในช่วงเวลา */
+    function statsTasks() { return periodTasks().concat(archivedTasks().filter(inPeriod)); }
+    function archivedNote(list) {
+      var n = list.filter(function (t) { return t.archived; }).length;
+      return n ? '<div class="hint" style="margin:-4px 0 14px">ตัวเลขรวมงานที่เก็บถาวรแล้ว ' + n + ' งาน (นับในสถิติ แต่ไม่แสดงในรายการงาน · ดูรายละเอียดได้ในแท็บ "งาน (เก็บถาวร)" ของ Google Sheet)</div>' : '';
+    }
     function periodYears() {
       var y = +todayStr().slice(0, 4), min = y;
       state.tasks.forEach(function (t) { var d = assignedDate(t) || t.dueDate; if (d) min = Math.min(min, +d.slice(0, 4)); });
@@ -1522,7 +1609,7 @@
 
     /* ---------------- เมนูตามบทบาท (ข้อมูลถูกกรองที่เซิร์ฟเวอร์แล้ว) ---------------- */
     function allowedViews() {
-      var v = ['dashboard', 'report', 'mine', 'checklist', 'assigned', 'review'];
+      var v = ['dashboard', 'calendar', 'report', 'mine', 'checklist', 'assigned', 'review'];
       if (hasAssignQueue()) v.push('toassign');
       if (hasCcTasks()) v.push('cc');
       v.push('all');
@@ -1912,7 +1999,7 @@
       var f = state.filters.dashboard, all, title, extra = '';
       if (f.tab === 'teams') { $('#results').innerHTML = allTeamsDashboard(); bindTeamCards(); bindStatCards({}); return; }
       var scopeFilter = {};
-      var ptasks = headScoped() ? periodTasks().filter(isMyTeamTask) : periodTasks();   // หัวหน้าฝ่าย: ตัวเลขตรงกับรายการงานทั้งหมด
+      var ptasks = headScoped() ? statsTasks().filter(isMyTeamTask) : statsTasks();   // หัวหน้าฝ่าย: ตัวเลขตรงกับรายการงานทั้งหมด (รวมงานเก็บถาวร)
       if (f.tab === 'person') {
         all = ptasks.filter(function (t) { return (t.owners || []).indexOf(f.person) > -1; });
         title = 'งานของ ' + f.person; scopeFilter.owner = f.person;
@@ -1925,7 +2012,7 @@
         title = seesAll() ? 'งานทุกทีม' : role() === 'head' ? 'งานของทีม' : 'งานของฉัน';
         if (isManager()) extra = teamBreakdown(all);
       }
-      $('#results').innerHTML = summaryHtml(all, true) + statusPanel(title, all) + extra;
+      $('#results').innerHTML = summaryHtml(all, true) + archivedNote(all) + statusPanel(title, all) + extra;
       bindStatCards(scopeFilter);
     }
 
@@ -1982,9 +2069,9 @@
     }
     function allTeamsDashboard() {
       var groups = state.boot.teams.map(function (tm) {
-        return { name: tm, list: periodTasks().filter(function (t) { return (t.depts || []).indexOf(tm) > -1; }) };
+        return { name: tm, list: statsTasks().filter(function (t) { return (t.depts || []).indexOf(tm) > -1; }) };
       });
-      var none = periodTasks().filter(function (t) { return !(t.depts || []).length; });
+      var none = statsTasks().filter(function (t) { return !(t.depts || []).length; });
       if (none.length) groups.push({ name: '', list: none });
       var cards = groups.map(function (g) {
         var s = teamStats(g.list);
@@ -2007,7 +2094,7 @@
           '<td class="num" data-label="เกินกำหนด"><span class="' + (s.overdue ? 'num-danger' : '') + '">' + s.overdue + '</span></td>' +
           '<td class="num" data-label="% เสร็จ"><span class="pct">' + pctDone(s) + '%</span></td></tr>';
       }).join('');
-      return summaryHtml(periodTasks(), true) +
+      return summaryHtml(statsTasks(), true) + archivedNote(statsTasks()) +
         '<div class="team-grid">' + cards + '</div>' +
         '<section class="panel breakdown"><div class="panel-head"><h2 class="panel-title">เทียบทุกทีม แยกตามสถานะ</h2><span class="count">กดการ์ดทีมด้านบนเพื่อดูงานของทีมนั้น</span></div>' +
         '<div class="table-wrap"><table class="task-table"><thead><tr><th>ทีม</th><th class="num">ทั้งหมด</th>' +
@@ -2219,7 +2306,7 @@
     }
     function reportScope() {
       var f = state.filters.report;
-      return state.tasks.concat(role() !== 'employee' && state.boot && state.boot.maskedTasks || []).filter(function (t) {   // งานส่วนตัวแบบตัวเลขล้วน: ผู้บริหาร/หัวหน้าฝ่าย
+      return state.tasks.concat(archivedTasks(), role() !== 'employee' && state.boot && state.boot.maskedTasks || []).filter(function (t) {   // งานส่วนตัวแบบตัวเลขล้วน: ผู้บริหาร/หัวหน้าฝ่าย
         if (headScoped() && !isMyTeamTask(t)) return false;       // หัวหน้าฝ่าย: เฉพาะงานของทีมตัวเอง
         if (f.assigner && t.assigner !== f.assigner) return false;
         if (f.team && (t.depts || []).indexOf(f.team) === -1) return false;
@@ -2276,6 +2363,7 @@
       }).sort(function (a, b) { return b.received - a.received || a.name.localeCompare(b.name, 'th'); });
       var unassigned = list.filter(function (t) { return isUnassigned(t) && !isFinal(t) && !t.masked; }).length;
       var nMasked = list.filter(function (t) { return t.masked; }).length;
+      html += archivedNote(list);
       html += '<section class="panel breakdown"><div class="panel-head"><h2 class="panel-title">ผลงานรายคน</h2><span class="count">กดชื่อเพื่อดูรายการงาน</span></div>' +
         '<div class="table-wrap"><table class="task-table"><thead><tr><th>ผู้รับผิดชอบ</th><th class="num">ได้รับ</th><th class="num">เสร็จ</th>' +
         '<th class="num">ทัน SLA</th><th class="num">เกิน SLA</th><th class="num">เกินกำหนดส่ง</th><th class="num">ยังไม่เสร็จ</th><th class="num">เกินกำหนด (ยังไม่ส่ง)</th><th class="num">ยกเลิก</th>' +
@@ -2392,6 +2480,148 @@
           tableHtml(parked, ['title', 'main', 'due', 'action'], 'รอผู้รับผิดชอบตอบ', '') + '</details>' : '');
     }
 
+    /* ---------------- ปฏิทินงาน ----------------
+       วางงานตาม "กำหนดส่ง" · ใช้รายการงานชุดเดียวกับทุกหน้า (state.tasks) ไม่เรียกเซิร์ฟเวอร์เพิ่ม
+       งานที่ยังไม่เสร็จและเลยกำหนดแล้วเป็นสีแดง · กดงานเพื่อเปิดรายละเอียด · กดวันเพื่อดูรายการของวันนั้น */
+    var CAL_DOW = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
+    var CAL_DOW_FULL = ['วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์', 'วันอาทิตย์'];
+    var CAL_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    function calAdd(s, n) { return new Date(toUTC(s) + n * 86400000).toISOString().slice(0, 10); }
+    function calDow(s) { return (new Date(toUTC(s)).getUTCDay() + 6) % 7; }            // 0 = จันทร์
+    function calMonthStart(s) { return s.slice(0, 8) + '01'; }
+    function calAddMonths(s, n) { var y = +s.slice(0, 4), m = +s.slice(5, 7) - 1 + n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + '-' + ('0' + (m + 1)).slice(-2) + '-01'; }
+    function calBE(s) { return +s.slice(0, 4) + 543; }
+    function calState() {
+      if (!state.cal) {
+        var t = todayStr();
+        state.cal = { mode: 'month', cursor: t, sel: t, scope: (seesAll() || headScoped()) ? 'all' : 'mine', team: '', showDone: false };
+      }
+      return state.cal;
+    }
+    function calScopeTasks(c) {
+      return state.tasks.filter(function (t) {
+        if (!t.dueDate || t.masked) return false;
+        if (c.scope === 'mine') { if (!(t.perms && t.perms.involvement.owner)) return false; }
+        else if (c.scope === 'assigned') { if (!(t.perms && t.perms.involvement.assigner)) return false; }
+        else if (!(allListScope(t) || ccOnlyTask(t))) return false;
+        if (c.team && (t.depts || []).indexOf(c.team) === -1 && t.team !== c.team) return false;
+        if (t.status === CANCELLED) return c.showDone;
+        if (t.status === CLOSED) return c.showDone;
+        return true;
+      });
+    }
+    function calTone(t) { return dueInfo(t).kind === 'overdue' ? 'danger' : (STATUS_TONE[t.status] || 'neutral'); }
+    function calLabel(t) { return dueInfo(t).kind === 'overdue' ? 'เกินกำหนด' : t.status; }
+    function calSort(a, b) {
+      var r = function (t) { return dueInfo(t).kind === 'overdue' ? 0 : isFinal(t) ? 3 : t.status === REVIEW ? 2 : 1; };
+      return r(a) - r(b) || String(a.slaTime || '23:59').localeCompare(String(b.slaTime || '23:59')) || (PRIORITY_RANK[a.priority] == null ? 9 : PRIORITY_RANK[a.priority]) - (PRIORITY_RANK[b.priority] == null ? 9 : PRIORITY_RANK[b.priority]) || a.id.localeCompare(b.id);
+    }
+    function calByDay(list) {
+      var m = {};
+      list.forEach(function (t) { (m[t.dueDate] = m[t.dueDate] || []).push(t); });
+      Object.keys(m).forEach(function (k) { m[k].sort(calSort); });
+      return m;
+    }
+    function calTimeText(t) { return t.slaTime ? 'ก่อน ' + t.slaTime + ' น.' : (t.slaType || ''); }
+    function calItemHtml(t) {
+      var tone = calTone(t), who = mainOwnerOf(t) || (t.team ? 'ทีม ' + t.team + ' (ยังไม่ระบุคน)' : 'ยังไม่ระบุ');
+      var meta = [who, calTimeText(t)].filter(Boolean).join(' · ');
+      return '<li><button type="button" class="cal-item b-' + tone + '" data-open="' + esc(t.id) + '">' +
+        '<span class="ci-top"><span>' + esc(t.id) + (isCcMe(t) ? ' · CC' : '') + '</span><span class="pill tone-' + tone + '">' + esc(calLabel(t)) + '</span></span>' +
+        '<span class="ci-title">' + esc(t.title) + '</span>' +
+        '<span class="ci-meta">' + esc(meta) + (t.team && mainOwnerOf(t) ? '<span class="ci-team"> · ' + esc(t.team) + '</span>' : '') + '</span></button></li>';
+    }
+    function renderCalendar() {
+      var c = calState();
+      var teams = visibleTeams();
+      if (c.team && teams.indexOf(c.team) === -1) c.team = '';
+      var scopes = [['mine', 'งานของฉัน'], ['assigned', 'ที่ฉันมอบหมาย'], ['all', 'ทั้งหมด']];
+      var html = '<div class="cal-bar">' +
+          '<div class="seg" role="group" aria-label="มุมมอง">' + [['month', 'เดือน'], ['week', 'สัปดาห์']].map(function (x) {
+            return '<button type="button" data-cal-mode="' + x[0] + '" aria-pressed="' + (c.mode === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+          '<div class="cal-nav"><button class="btn btn-icon" type="button" id="calPrev" aria-label="ก่อนหน้า">‹</button>' +
+            '<span class="cal-title" id="calTitle" aria-live="polite"></span>' +
+            '<button class="btn btn-icon" type="button" id="calNext" aria-label="ถัดไป">›</button>' +
+            '<button class="btn btn-sm" type="button" id="calToday">วันนี้</button></div>' +
+          '<span class="grow"></span>' +
+          '<div class="cal-opts">' +
+            '<div class="seg" role="group" aria-label="แสดงงานของ">' + scopes.map(function (x) {
+              return '<button type="button" data-cal-scope="' + x[0] + '" aria-pressed="' + (c.scope === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+            (teams.length > 1 ? '<select class="select" id="calTeam" aria-label="ทีม">' + options(teams, c.team, 'ทุกทีม') + '</select>' : '') +
+            '<label class="chk"><input type="checkbox" id="calDone"' + (c.showDone ? ' checked' : '') + '> แสดงงานที่เสร็จ/ยกเลิกแล้ว</label>' +
+          '</div>' +
+        '</div><div id="results"></div>';
+      $('#content').innerHTML = banner() + html;
+      $$('[data-cal-mode]').forEach(function (b) { b.addEventListener('click', function () { c.mode = b.getAttribute('data-cal-mode'); c.cursor = c.sel; renderCalendar(); }); });
+      $$('[data-cal-scope]').forEach(function (b) { b.addEventListener('click', function () { c.scope = b.getAttribute('data-cal-scope'); $$('[data-cal-scope]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); renderCalendarResults(); }); });
+      $('#calPrev').addEventListener('click', function () { c.cursor = c.mode === 'month' ? calAddMonths(calMonthStart(c.cursor), -1) : calAdd(c.cursor, -7); renderCalendarResults(); });
+      $('#calNext').addEventListener('click', function () { c.cursor = c.mode === 'month' ? calAddMonths(calMonthStart(c.cursor), 1) : calAdd(c.cursor, 7); renderCalendarResults(); });
+      $('#calToday').addEventListener('click', function () { c.cursor = c.sel = todayStr(); renderCalendarResults(); });
+      if ($('#calTeam')) $('#calTeam').addEventListener('change', function () { c.team = this.value; renderCalendarResults(); });
+      $('#calDone').addEventListener('change', function () { c.showDone = this.checked; renderCalendarResults(); });
+      $('#results').addEventListener('click', function (e) {
+        if (e.target.closest('[data-open]')) return;                  // กดงาน → เปิดรายละเอียด (ตัวจัดการกลางของหน้า)
+        var d = e.target.closest('[data-cal-day]');
+        if (d) { c.sel = d.getAttribute('data-cal-day'); renderCalendarResults(); var side = $('#calSide'); if (side && window.innerWidth <= 1180) side.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+      renderCalendarResults();
+    }
+    function renderCalendarResults() {
+      var c = calState(), today = todayStr();
+      var byDay = calByDay(calScopeTasks(c));
+      var html = '';
+      if (c.mode === 'month') {
+        var first = calMonthStart(c.cursor), start = calAdd(first, -calDow(first));
+        var month = first.slice(0, 7);
+        if (c.sel.slice(0, 7) !== month) c.sel = month === today.slice(0, 7) ? today : first;
+        $('#calTitle').textContent = CAL_MONTHS[+first.slice(5, 7) - 1] + ' ' + calBE(first);
+        var weeks = Math.ceil((calDow(first) + new Date(Date.UTC(+first.slice(0, 4), +first.slice(5, 7), 0)).getUTCDate()) / 7);
+        html += '<div class="cal-layout"><div class="cal-card"><div class="cal-head">' + CAL_DOW.map(function (d) { return '<div>' + d + '</div>'; }).join('') + '</div><div class="cal-grid">';
+        for (var i = 0; i < weeks * 7; i++) {
+          var day = calAdd(start, i), list = byDay[day] || [], dow = i % 7;
+          var cls = 'cal-day' + (day.slice(0, 7) !== month ? ' out' : '') + (dow >= 5 ? ' wkend' : '') + (day === today ? ' today' : '') + (day === c.sel ? ' sel' : '');
+          var late = list.filter(function (t) { return calTone(t) === 'danger'; }).length;
+          html += '<div class="' + cls + '" role="button" tabindex="0" data-cal-day="' + day + '" aria-label="' + esc(thaiDate(day) + (list.length ? ' มี ' + list.length + ' งาน' + (late ? ' เกินกำหนด ' + late : '') : ' ไม่มีงาน')) + '"' + (day === c.sel ? ' aria-current="date"' : '') + '>' +
+            '<span class="cal-dn"><b>' + (+day.slice(8)) + '</b>' + (list.length ? '<span class="cal-n">' + list.length + ' งาน</span>' : '') + '</span>' +
+            list.slice(0, 3).map(function (t) { var tone = calTone(t); return '<a href="#" class="cal-chip ' + (tone === 'danger' ? 'late' : 'tone-' + tone) + '" data-open="' + esc(t.id) + '" title="' + esc(t.id + ' ' + t.title + ' · ' + calLabel(t) + ' · ' + (mainOwnerOf(t) || 'ยังไม่ระบุ')) + '">' + esc(t.title) + '</a>'; }).join('') +
+            (list.length > 3 ? '<span class="cal-more">+' + (list.length - 3) + ' งาน</span>' : '') +
+            (list.length ? '<span class="cal-dots" aria-hidden="true">' + list.slice(0, 4).map(function (t) { return '<i class="dot-' + calTone(t) + '"></i>'; }).join('') + '</span>' : '') +
+            '</div>';
+        }
+        html += '</div></div>' + calSideHtml(c, byDay, today) + '</div>';
+      } else {
+        var ws = calAdd(c.cursor, -calDow(c.cursor)), we = calAdd(ws, 6);
+        if (c.sel < ws || c.sel > we) c.sel = today >= ws && today <= we ? today : ws;
+        $('#calTitle').textContent = (+ws.slice(8)) + (ws.slice(5, 7) !== we.slice(5, 7) ? ' ' + CAL_MONTHS[+ws.slice(5, 7) - 1].slice(0, 3) + '.' : '') + ' – ' + (+we.slice(8)) + ' ' + CAL_MONTHS[+we.slice(5, 7) - 1] + ' ' + calBE(we);
+        html += '<div class="cal-week">';
+        for (var k = 0; k < 7; k++) {
+          var d = calAdd(ws, k), l = byDay[d] || [];
+          html += '<section class="cal-wcol' + (d === today ? ' today' : '') + (k >= 5 ? ' wkend' : '') + '" aria-label="' + esc(CAL_DOW_FULL[k] + ' ' + thaiDate(d)) + '">' +
+            '<div class="cal-whead"><span>' + CAL_DOW[k] + '</span><b>' + (+d.slice(8)) + '</b><span>' + (l.length ? l.length + ' งาน' : '') + (d === today ? ' · วันนี้' : '') + '</span></div>' +
+            (l.length ? '<ul class="cal-list">' + l.map(calItemHtml).join('') + '</ul>' : '<div class="cal-empty">—</div>') + '</section>';
+        }
+        html += '</div>';
+      }
+      var overdue = calScopeTasks(c).filter(function (t) { return calTone(t) === 'danger'; });
+      html += '<div class="cal-legend">' + [['neutral', 'ยังไม่เริ่ม'], ['info', 'กำลังดำเนินการ'], ['review', 'ส่งตรวจ'], ['warning', 'ต้องแก้ไข'], ['danger', 'เกินกำหนด'], ['done', 'เสร็จแล้ว']].map(function (x) {
+          return '<span><i class="dot-' + x[0] + '"></i>' + x[1] + '</span>'; }).join('') +
+        (overdue.length ? '<span style="color:var(--danger);font-weight:600">เกินกำหนดที่ยังไม่เสร็จ ' + overdue.length + ' งาน</span>' : '') + '</div>';
+      $('#results').innerHTML = html;
+      $$('#results .cal-day').forEach(function (el) {
+        el.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); el.click(); } });
+      });
+      $$('#results a.cal-chip').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); }); });
+    }
+    function calSideHtml(c, byDay, today) {
+      var list = byDay[c.sel] || [];
+      var d = calDow(c.sel), diff = daysFromToday(c.sel);
+      var rel = diff === 0 ? ' · วันนี้' : diff === 1 ? ' · พรุ่งนี้' : diff === -1 ? ' · เมื่อวาน' : '';
+      return '<aside class="cal-card cal-side" id="calSide" aria-label="งานที่ครบกำหนดวันที่เลือก"><div class="cal-side-head"><h3>' + esc(CAL_DOW_FULL[d] + ' ' + thaiDate(c.sel)) + esc(rel) + '</h3>' +
+        '<span class="hint">' + (list.length ? list.length + ' งาน' : '') + '</span></div>' +
+        (list.length ? '<ul class="cal-list">' + list.map(calItemHtml).join('') + '</ul>' : '<div class="cal-empty">ไม่มีงานที่ครบกำหนดวันนี้' + (c.showDone ? '' : '<br><span class="hint">งานที่เสร็จแล้วซ่อนอยู่ — ติ๊ก "แสดงงานที่เสร็จ/ยกเลิกแล้ว" เพื่อดู</span>') + '</div>') +
+        '</aside>';
+    }
+
     function renderToAssign() {
       var f = state.filters.toassign;
       var html = '<div class="filters cols-2 m-search-only" role="search"><div class="field search-field"><label for="aQ">ค้นหา</label><div class="search-wrap">' + icon('search') +
@@ -2448,6 +2678,7 @@
     function renderView() {
       var v = state.view;
       if (v === 'dashboard') renderDashboard();
+      else if (v === 'calendar') renderCalendar();
       else if (v === 'review') renderReview();
       else if (v === 'toassign') renderToAssign();
       else if (v === 'settings') renderSettings();
@@ -2461,6 +2692,7 @@
       var v = state.view;
       if (!$('#results')) { renderView(); return; }
       if (v === 'dashboard') renderDashboardResults();
+      else if (v === 'calendar') renderCalendarResults();
       else if (v === 'review') renderReviewResults();
       else if (v === 'toassign') renderToAssignResults();
       else if (v === 'settings' || v === 'checklist') { /* ไม่มีรายการงาน */ }
@@ -2505,6 +2737,7 @@
       $('#modalFoot').innerHTML = foot || '';
       $('.modal').classList.toggle('wide', !!wide);
       $('#modalClose').disabled = false;
+      state.modalSticky = false;
       $('#modal').hidden = false;
       document.body.style.overflow = 'hidden';
     }
@@ -2620,6 +2853,20 @@
             (outside && (p.depts || []).length ? ' <span class="muted">· ' + esc(p.depts.join(', ')) + '</span>' : '') + '</label>';
         }).join('') + '</div>' +
         (members.length ? '' : '<div class="hint" id="' + hintId + '">ทีมนี้ยังไม่มีสมาชิกในระบบ — มอบให้ทีมได้เลย หัวหน้าทีมจะระบุผู้รับผิดชอบเอง</div>') + allBtn;
+    }
+    /** หัวหน้าฝ่ายที่เป็นผู้รับผิดชอบ: เลือกได้เฉพาะคนในฝ่ายตัวเอง · ผู้รับผิดชอบเดิมที่อยู่นอกฝ่ายเอาออกไม่ได้ (ล็อกไว้) */
+    function scopedOwnersHtml(selected, scope, pre) {
+      var chipsId = pre + 'Owners';
+      var inScope = function (p) { return (p.depts || []).some(function (d) { return scope.indexOf(d) > -1; }); };
+      var people = state.boot.people.filter(function (p) { return inScope(p) || selected.indexOf(p.name) > -1; });
+      selected.forEach(function (n) { if (!people.some(function (p) { return p.name === n; })) people.push({ name: n, depts: [] }); });
+      people.sort(function (a, b) { return (selected.indexOf(b.name) > -1) - (selected.indexOf(a.name) > -1) || a.name.localeCompare(b.name, 'th'); });
+      return '<div class="chips" id="' + chipsId + '">' + people.map(function (p) {
+          var locked = !inScope(p) && p.name !== me().name && selected.indexOf(p.name) > -1;
+          return '<label class="chip"' + (locked ? ' title="อยู่นอกฝ่ายของคุณ — ผู้มอบหมายเท่านั้นที่เอาออกได้"' : '') + '><input type="checkbox" value="' + esc(p.name) + '"' +
+            (selected.indexOf(p.name) > -1 ? ' checked' : '') + (locked ? ' disabled' : '') + '>' + esc(p.name) + (locked ? ' ' + icon('lock') : '') + '</label>';
+        }).join('') + '</div>' +
+        '<div class="hint">คุณเป็นหัวหน้าฝ่าย — เพิ่มหรือเปลี่ยนผู้รับผิดชอบได้เฉพาะคนในฝ่าย ' + esc(scope.join(', ')) + '</div>';
     }
     function checkedValues(id) { return $$('#' + id + ' input:checked').map(function (i) { return i.value; }); }
     function syncMainOwner(chipsId, selectId) {
@@ -2738,7 +2985,7 @@
       else if (t.reviewer && (p.involvement.assigner || p.canAssign)) html += '<div class="field"><span class="field-label">ผู้ตรวจงาน ' + icon('lock') + '</span><div>' + personHtml(t.reviewer) + '</div>' +
         '<span class="hint">ล็อกไว้ตั้งแต่สร้างงาน — เปลี่ยนได้เฉพาะผู้ดูแลระบบ</span></div>';
       if (p.canAssign) {
-        html += '<div class="field full"><span class="field-label">ผู้รับผิดชอบ</span><div id="uOwnersWrap">' + createOwnersHtml(t.owners, t.team, !t.team, 'u') + '</div></div>' +
+        html += '<div class="field full"><span class="field-label">ผู้รับผิดชอบ</span><div id="uOwnersWrap">' + (p.assignScope ? scopedOwnersHtml(t.owners, p.assignScope, 'u') : createOwnersHtml(t.owners, t.team, !t.team, 'u')) + '</div></div>' +
           '<div class="field"><label for="uMain">ผู้รับผิดชอบหลัก</label><select class="select" id="uMain"></select></div>';
       } else if (p.involvement.owner && !isFinal(t)) {
         html += '<div class="field full"><span class="field-label">ผู้รับผิดชอบ</span><div>' + peopleHtml(t.owners) + '</div>' +
@@ -2937,6 +3184,7 @@
         if (tg) tg.addEventListener('click', function () { uShowAll = this.getAttribute('data-all') === '1'; drawOwners(); });
       };
       var drawOwners = function () {
+        if (p.assignScope) { $('#uOwnersWrap').innerHTML = scopedOwnersHtml(checkedValues('uOwners'), p.assignScope, 'u'); bindOwners(); return; }
         var team = $('#uTeam') ? $('#uTeam').value : (t.team || '');
         $('#uOwnersWrap').innerHTML = createOwnersHtml(checkedValues('uOwners'), team, uShowAll || !team, 'u');
         bindOwners();
@@ -3024,25 +3272,47 @@
       tm.addEventListener('input', function () { if (onChange) onChange(); });
     }
 
+    /* ร่างฟอร์มสร้างงาน — เก็บทุกครั้งที่พิมพ์ ปิดหน้าต่าง/หลุดออกจากระบบ/เปิดแอปใหม่ แล้วกลับมาเปิดจะได้ข้อความเดิม
+       เก็บในเครื่องนี้เท่านั้น (แยกตามผู้ใช้) · ล้างเมื่อสร้างงานสำเร็จ กด "ล้างฟอร์ม" หรือออกจากระบบ */
+    function draftKey() { return 'itc_cdraft_' + ((state.boot && state.boot.user && state.boot.user.username) || ''); }
+    function loadDraft() {
+      var who = (state.boot && state.boot.user && state.boot.user.username) || '';
+      if (state.createDraft && state.createDraft.user === who) return state.createDraft;
+      try { var d = JSON.parse(localStorage.getItem(draftKey()) || 'null'); return d && typeof d === 'object' && d.user === who ? d : null; } catch (e) { return null; }
+    }
+    function saveDraft(d) {
+      if (d) d.user = (state.boot && state.boot.user && state.boot.user.username) || '';
+      state.createDraft = d;
+      try { if (d) localStorage.setItem(draftKey(), JSON.stringify(d)); else localStorage.removeItem(draftKey()); } catch (e) { /* เก็บในหน่วยความจำแทน */ }
+    }
+    function draftHasText(d) { return !!d && !!(d.title || d.detail || d.note); }
+
     function openCreate() {
       if (state.boot.upgraded === false) { toast('ยังสร้างงานไม่ได้ — ผู้ดูแลระบบต้องรัน upgradeDatabase ก่อน'); return; }
       var requestId = uuid();
       var u = me();
       var f = state.filters.dashboard;
+      var draft = loadDraft();
+      if (!draftHasText(draft)) draft = null;
       var presetOwner = state.view === 'dashboard' && f.tab === 'person' ? f.person : '';
-      var presetTeam = state.view === 'dashboard' && f.tab === 'team' ? f.team : '';
+      var presetTeam = draft ? (draft.team || '') : state.view === 'dashboard' && f.tab === 'team' ? f.team : '';
+      var presetOwners = draft ? (draft.owners || []).filter(function (n) { return state.boot.people.some(function (p) { return p.name === n; }); }) : presetOwner ? [presetOwner] : [];
+      if (presetTeam && state.boot.teams.indexOf(presetTeam) === -1) presetTeam = '';
       var body =
         '<form id="createForm" novalidate><div class="form-grid">' +
+          (draft ? '<div class="field full" id="cDraftNote"><div class="notice notice-info" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
+            '<span style="flex:1;min-width:200px">กู้ข้อความที่พิมพ์ค้างไว้ให้แล้ว' + (draft.at ? ' (' + esc(thaiDateTime(draft.at)) + ')' : '') + ' · ไฟล์แนบต้องเลือกใหม่</span>' +
+            '<button class="btn btn-sm" type="button" id="cDraftClear">ล้างฟอร์ม</button></div></div>' : '') +
           '<div class="field full"><label for="cTitle">ชื่องาน <span class="req">*</span></label><input class="input" id="cTitle" maxlength="300" required></div>' +
           '<div class="field full"><label for="cDetail">โจทย์ / รายละเอียด และผลลัพธ์ที่ต้องส่ง <span class="req">*</span></label><textarea class="textarea" id="cDetail" maxlength="3000" placeholder="งานที่ต้องทำ และผลลัพธ์/ไฟล์ที่ต้องส่ง (วางลิงก์ได้ ระบบจะทำให้กดเปิดได้)"></textarea><div class="link-preview" id="cDetailLinks" hidden></div></div>' +
           attachFieldHtml('cAtt', 'ไฟล์แนบ <span class="hint">(ไม่บังคับ)</span>') +
           '<div class="field"><label for="cTeam">ทีมที่รับงาน</label><select class="select" id="cTeam">' + options(state.boot.teams, presetTeam, '— ไม่ระบุทีม (มอบให้บุคคล) —') + '</select>' +
             '<span class="hint">มอบให้ทีมได้โดยยังไม่เลือกคน — หัวหน้าทีมจะระบุผู้รับผิดชอบเอง</span></div>' +
           '<div class="field"><label for="cPriority">ความสำคัญ <span class="req">*</span></label><select class="select" id="cPriority">' + options(state.boot.priorities, '', '— เลือกความสำคัญ —') + '</select></div>' +
-          '<div class="field full"><span class="field-label">ผู้รับผิดชอบ (เลือกได้หลายคน · ไม่บังคับถ้าเลือกทีมแล้ว)</span><div id="cOwnersWrap">' + createOwnersHtml(presetOwner ? [presetOwner] : [], presetTeam, false) + '</div></div>' +
+          '<div class="field full"><span class="field-label">ผู้รับผิดชอบ (เลือกได้หลายคน · ไม่บังคับถ้าเลือกทีมแล้ว)</span><div id="cOwnersWrap">' + createOwnersHtml(presetOwners, presetTeam, false) + '</div></div>' +
           '<div class="field"><label for="cMain">ผู้รับผิดชอบหลัก</label><select class="select" id="cMain"></select></div>' +
           '<div class="field"><label for="cReviewer">ผู้ตรวจงาน</label><select class="select" id="cReviewer"></select><span class="hint">ค่าเริ่มต้นคือคุณ (ผู้มอบหมาย) · ต้องไม่ใช่ผู้รับผิดชอบ</span></div>' +
-          ccPickerHtml('c', [], [me().name]) +
+          ccPickerHtml('c', draft ? (draft.cc || []) : [], [me().name]) +
           '<div class="field"><label for="cStart">วันที่เริ่ม</label><input class="input" id="cStart" type="date" value="' + todayStr() + '"></div>' +
           '<div class="field"><label for="cDue">วันที่กำหนดส่ง (Deadline) <span class="req">*</span></label><input class="input" id="cDue" type="date"></div>' +
           slaTimeFieldHtml('c', '', '') +
@@ -3053,11 +3323,19 @@
           '<div class="field full"><span class="hint">ผู้มอบหมาย: <strong>' + esc(u.name) + '</strong> (บันทึกเป็นชื่อผู้ที่เข้าสู่ระบบอยู่)</span></div>' +
           '<div class="field full" id="cError"></div>' +
         '</div></form>';
-      var foot = '<button class="btn" type="button" data-close>ยกเลิก</button>' +
+      var foot = '<button class="btn" type="button" data-close title="ข้อความที่พิมพ์ไว้จะเก็บไว้ให้ เปิดใหม่แล้วพิมพ์ต่อได้">ปิด</button>' +
         '<button class="btn btn-primary" type="submit" form="createForm" id="cSubmit">' + icon('plus') + 'สร้างงาน</button>';
       openModal('สร้างงานใหม่', body, foot, true);
-      focusFirst();
+      state.modalSticky = true;          // คลิกพื้นหลัง / กด Esc ไม่ปิดหน้าต่างนี้ (กันข้อความหาย)
       bindSlaTime('c');
+      if (draft) {                       // ใส่ค่าที่พิมพ์ค้างไว้กลับเข้าไป
+        var setv = function (id, v) { var el = $('#' + id); if (el && v != null && v !== '') el.value = v; };
+        setv('cTitle', draft.title); setv('cDetail', draft.detail); setv('cNote', draft.note);
+        setv('cPriority', draft.priority); setv('cStart', draft.startDate); setv('cDue', draft.dueDate); setv('cStatus', draft.status);
+        if (draft.slaType) { setv('cSlaType', draft.slaType); $('#cSlaTime').hidden = draft.slaType !== SLA_CUSTOM; if (draft.slaType === SLA_CUSTOM) setv('cSlaTime', draft.slaTime); }
+        if ($('#cPrivate') && draft.private) $('#cPrivate').checked = true;
+      }
+      focusFirst();
 
       var reviewerTouched = false;
       var syncReviewer = function () {
@@ -3077,6 +3355,13 @@
         if (tg) tg.addEventListener('click', function () { showAllOwners = this.getAttribute('data-all') === '1'; drawOwners(); });
       };
       syncMainOwner('cOwners', 'cMain'); syncReviewer(); bindChips();
+      if (draft) {
+        if (draft.mainOwner && checkedValues('cOwners').indexOf(draft.mainOwner) > -1) $('#cMain').value = draft.mainOwner;
+        if (draft.reviewerTouched) {
+          reviewerTouched = true;
+          $('#cReviewer').innerHTML = reviewerOptions(checkedValues('cOwners').indexOf(draft.reviewer) > -1 ? '' : (draft.reviewer || ''), checkedValues('cOwners'));
+        }
+      }
       $('#cReviewer').addEventListener('change', function () { reviewerTouched = true; });
       $('#cTeam').addEventListener('change', function () {           // เลือกทีมแล้วแสดงเฉพาะคนในทีม (คนที่ติ๊กไว้แล้วยังอยู่)
         showAllOwners = false;
@@ -3088,9 +3373,31 @@
       });
       var cAtt = setupAttach('cAtt', 'create', '');
       bindCcSearch('c');
-      $('#cDetail').addEventListener('input', function () {   // ลิงก์ในรายละเอียด → แสดงให้กดตรวจได้ใต้ช่อง
-        var box = $('#cDetailLinks'), h = detailLinksPreview(this.value);
+      var showLinks = function () {   // ลิงก์ในรายละเอียด → แสดงให้กดตรวจได้ใต้ช่อง
+        var box = $('#cDetailLinks'), h = detailLinksPreview($('#cDetail').value);
         box.innerHTML = h; box.hidden = !h;
+      };
+      $('#cDetail').addEventListener('input', showLinks);
+      if (draft) showLinks();
+      var collect = function () {
+        var g = function (id) { var el = $('#' + id); return el ? el.value : ''; };
+        return { title: g('cTitle'), detail: g('cDetail'), note: g('cNote'), team: g('cTeam'), priority: g('cPriority'),
+          owners: checkedValues('cOwners'), mainOwner: g('cMain'), reviewer: g('cReviewer'), reviewerTouched: reviewerTouched,
+          cc: checkedValues('cCc'), startDate: g('cStart'), dueDate: g('cDue'), slaType: g('cSlaType'), slaTime: g('cSlaTime'),
+          status: g('cStatus'), private: !!($('#cPrivate') && $('#cPrivate').checked), at: new Date().toISOString() };
+      };
+      var draftTimer = null;
+      var keepDraft = function () {
+        clearTimeout(draftTimer);
+        draftTimer = setTimeout(function () { if ($('#createForm')) { var d = collect(); saveDraft(draftHasText(d) ? d : null); } }, 300);
+      };
+      $('#createForm').addEventListener('input', keepDraft);
+      $('#createForm').addEventListener('change', keepDraft);
+      if ($('#cDraftClear')) $('#cDraftClear').addEventListener('click', function () {
+        clearTimeout(draftTimer);
+        saveDraft(null);
+        state.modalSticky = false; closeModal(true);
+        openCreate();
       });
       $('#createForm').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -3130,6 +3437,8 @@
         data.attachments = cAtt.ids();
         data.cc = checkedValues('cCc').filter(function (n) { return data.owners.indexOf(n) === -1; });
         runAction($('#cSubmit'), 'กำลังบันทึก…', '#cError', function () { return callAuthed('createTask', data); }, function (task) {
+          clearTimeout(draftTimer);
+          saveDraft(null);                 // สร้างสำเร็จ → ล้างร่าง
           setTask(task);
           closeModal(true);
           refreshResults();
@@ -3370,6 +3679,45 @@
       });
     }
 
+    /* ---------------- เก็บงานเก่า (ผู้ดูแลระบบ) ---------------- */
+    function archiveLastHtml(last) {
+      return last ? '<div class="hint">ย้ายครั้งล่าสุด: ' + esc(thaiDateTime(last.at)) + ' โดย ' + esc(last.by) + ' · ' + last.moved + ' งาน (เกิน ' + last.days + ' วัน)</div>' : '';
+    }
+    function bindArchive() {
+      var form = $('#arcForm'); if (!form) return;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var btn = $('#arcPreview'), days = Number($('#arcDays').value);
+        btn.disabled = true; btn.textContent = 'กำลังตรวจ…';
+        callAuthed('adminArchivePreview', days).then(function (r) {
+          var box = $('#arcResult'); if (!box) return;
+          if (!r.moved) { box.innerHTML = '<div class="notice notice-info">ไม่มีงานที่ปิดก่อน ' + esc(thaiDate(r.cutoff)) + ' ให้ย้าย · ตอนนี้มีงานในเว็บ ' + r.remaining + ' งาน</div>' + archiveLastHtml(r.last); return; }
+          box.innerHTML = '<div class="notice notice-warn"><strong>จะย้าย ' + r.moved + ' งาน</strong> (เสร็จแล้ว ' + r.done + ' · ยกเลิก ' + r.cancelled + ') ที่ปิดก่อน ' + esc(thaiDate(r.cutoff)) +
+              ' พร้อมประวัติ ' + r.history + ' รายการ<br>เหลือในเว็บ ' + r.remaining + ' งาน · ประวัติเหลือ ' + r.historyRemaining + ' รายการ</div>' +
+            '<details style="margin-top:8px"><summary class="hint" style="cursor:pointer">ดูตัวอย่างงานที่จะย้าย' + (r.moved > r.sample.length ? ' (' + r.sample.length + ' จาก ' + r.moved + ')' : '') + '</summary><ul style="margin:6px 0 0;padding-left:18px;font-size:13px">' +
+              r.sample.map(function (x) { return '<li>' + esc(x.id) + ' · ' + esc(x.title) + ' <span class="muted">(' + esc(x.status) + ')</span></li>'; }).join('') + '</ul></details>' +
+            '<div class="action-row" style="margin-top:10px"><button class="btn btn-primary" type="button" id="arcRun">ย้าย ' + r.moved + ' งานไปเก็บถาวร</button></div>' + archiveLastHtml(r.last);
+          $('#arcRun').addEventListener('click', function () { confirmArchive(r); });
+        }).catch(function (err) {
+          if (!err.handled) showError('#arcResult', 'ตรวจไม่สำเร็จ: ' + cleanError(err));
+        }).then(function () { btn.disabled = false; btn.textContent = 'ตรวจดูก่อน'; });
+      });
+    }
+    function confirmArchive(r) {
+      var req = uuid();
+      openModal('ย้ายงานเก่าไปเก็บถาวร', '<p>ย้าย <strong>' + r.moved + ' งาน</strong> ที่เสร็จหรือยกเลิกก่อน ' + esc(thaiDate(r.cutoff)) + ' ไปแท็บเก็บถาวรใน Google Sheet?</p>' +
+        '<div class="notice notice-info">ข้อมูลไม่หาย ดูย้อนหลังได้ในชีต · แต่งานเหล่านี้จะไม่แสดงในเว็บ แดชบอร์ด และรายงานอีก · ' +
+        'แนะนำให้ทำสำเนาไฟล์ชีตไว้ก่อน (ไฟล์ → ทำสำเนา)</div><div id="arcError" style="margin-top:10px"></div>',
+        '<button class="btn" type="button" data-close>ยกเลิก</button><button class="btn btn-primary" type="button" id="arcGo">ย้ายเลย</button>');
+      $('#arcGo').addEventListener('click', function () {
+        runAction($('#arcGo'), 'กำลังย้าย…', '#arcError', function () { return callAuthed('adminArchiveRun', r.days, req); }, function (res) {
+          closeModal(true);
+          var msg = res.applied ? 'ย้ายไปเก็บถาวรแล้ว ' + res.moved + ' งาน' : 'ไม่มีงานให้ย้าย';
+          Promise.resolve(load(true)).then(function () { toast(msg); }, function () { toast(msg); });   // โหลดรายการงานใหม่ (งานที่ย้ายแล้วจะหายจากเว็บ)
+        });
+      });
+    }
+
     function drawSettings() {
       var s = state.settings;
       var pwText = { pending: '<span class="tag-mini warn">รอเข้าสู่ระบบครั้งแรก</span>', set: '<span class="tag-mini">ตั้งรหัสแล้ว</span>', none: '<span class="tag-mini warn">ยังไม่มีรหัสผ่าน</span>' };
@@ -3401,6 +3749,15 @@
         '<div style="padding:14px 18px"><form class="inline-form" id="teamForm"><input class="input" id="teamName" maxlength="60" placeholder="ชื่อทีมใหม่ เช่น Finance">' +
         '<button class="btn" type="submit" id="teamAdd">' + icon('plus') + 'เพิ่มทีม</button></form><div id="teamError" style="margin-top:10px"></div></div></section>' +
 
+        '<section class="panel"><div class="panel-head"><h2 class="panel-title">เก็บงานเก่า (ให้ระบบโหลดเร็วขึ้น)</h2><span class="count">ไม่ลบข้อมูล</span></div>' +
+        '<div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px">' +
+          '<div class="hint">ย้ายงานที่ <strong>เสร็จแล้ว</strong> หรือ <strong>ยกเลิก</strong> นานเกินที่เลือก พร้อมประวัติของงานนั้น ไปไว้ในแท็บ "งาน (เก็บถาวร)" และ "ประวัติ (เก็บถาวร)" ของ Google Sheet — ' +
+            'งานที่ย้ายแล้วจะไม่แสดงในเว็บ แดชบอร์ด รายงาน และปฏิทิน (ดูย้อนหลังได้ในชีต) · งานที่ยังไม่เสร็จไม่ถูกย้าย · เลขที่งานใหม่ไม่ซ้ำของเดิม</div>' +
+          '<form class="inline-form" id="arcForm"><label for="arcDays" style="white-space:nowrap">ปิดงานมาแล้วเกิน</label>' +
+            '<select class="select" id="arcDays" style="width:auto">' + [15, 30, 60, 90, 180].map(function (d) { return '<option value="' + d + '"' + (d === 30 ? ' selected' : '') + '>' + d + ' วัน</option>'; }).join('') + '</select>' +
+            '<button class="btn" type="submit" id="arcPreview">ตรวจดูก่อน</button></form>' +
+          '<div id="arcResult"></div></div></section>' +
+
         '<section class="panel"><div class="panel-head"><h2 class="panel-title">สิทธิ์ตามบทบาท</h2></div>' +
         '<table class="task-table role-table"><tbody>' + ROLE_HELP.map(function (r) { return '<tr><td data-label="">' + esc(r[0]) + '</td><td data-label="">' + esc(r[1]) + '</td></tr>'; }).join('') +
         '<tr><td data-label="">ผู้ตรวจงานแทน</td><td data-label="">ตั้งได้ที่ปุ่ม "แก้ไข" ของพนักงาน (เช่น เลขาตรวจแทน CEO) · รับงาน/ขอแก้ไขงานที่คนนั้นเป็นผู้ตรวจได้ และเห็นงานที่คนนั้นมอบหมาย · คนเดิมยังตรวจเองได้ · ประวัติบันทึกว่า "ตรวจแทน"</td></tr>' +
@@ -3409,6 +3766,7 @@
       $('#content').innerHTML = html;
 
       $('#addUserBtn').addEventListener('click', function () { openUserForm(null); });
+      bindArchive();
       $$('[data-edit-user]').forEach(function (b) { b.addEventListener('click', function () {
         openUserForm(s.users.filter(function (u) { return u.username === b.getAttribute('data-edit-user'); })[0]);
       }); });
@@ -3632,6 +3990,7 @@
 
     function doLogout() {
       stopPolling();
+      saveDraft(null);                     // ออกจากระบบเอง → ไม่เก็บร่างไว้ในเครื่อง
       var t = state.token;
       unregisterPush(t);
       clearToken();
@@ -3744,11 +4103,16 @@
       $('#newTaskBtn').addEventListener('click', function () { if (state.boot) openCreate(); });
       $('#sideCreateBtn').addEventListener('click', function () { closeNav(); if (state.boot) openCreate(); });
       $('#modalClose').addEventListener('click', function () { closeModal(); });
+      // คลิกพื้นหลัง (นอกหน้าต่าง) ไม่ปิดหน้าต่างใด ๆ — กันเผลอกดแล้วข้อความที่พิมพ์หาย · ปิดได้ด้วยปุ่ม ✕ / ปิด / ยกเลิก เท่านั้น
       $('#modal').addEventListener('click', function (e) {
-        if (e.target.id === 'modal' || e.target.hasAttribute('data-close')) closeModal();
+        if (e.target.hasAttribute('data-close')) closeModal();
       });
       document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { if (!$('#modal').hidden) closeModal(); else closeNav(); }
+        if (e.key === 'Escape') {
+          if (e.isComposing || e.keyCode === 229) return;                 // กำลังพิมพ์ด้วยแป้นภาษา (IME) — ไม่ใช่การสั่งปิด
+          // Esc ปิดหน้าต่างได้ ยกเว้นหน้าต่างสร้างงาน และตอนที่กำลังอยู่ในช่องกรอก (มักกด Esc เพื่อปิดปฏิทินเลือกวัน/รายการตัวเลือก)
+          if (!$('#modal').hidden) { var a = document.activeElement; if (!state.modalSticky && !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) closeModal(); } else closeNav();
+        }
       });
       $('#content').addEventListener('click', function (e) {
         var open = e.target.closest('[data-open]');
