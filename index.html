@@ -773,6 +773,13 @@
 
     .settings-grid { display: grid; gap: 20px; }
     .settings-table td, .settings-table th { vertical-align: middle; }
+    .settings-table .row-actions { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 120px; }
+    .settings-table .row-actions .btn { justify-content: center; white-space: nowrap; }
+    .settings-table td.cell-action { white-space: normal; }
+    .settings-wrap { overflow-x: auto; }
+    .users-table .acct-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .users-table .acct-cell .tag-mini { white-space: nowrap; }
+    .users-table td.cell-action { width: 1%; }
     .inline-form { display: flex; gap: 10px; flex-wrap: wrap; }
     .inline-form .input { flex: 1; min-width: 200px; }
     .pw-box { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 20px; font-weight: 700; letter-spacing: .04em;
@@ -952,7 +959,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-11-23-5"></script>
+  <script src="config.js?v=2026-11-23-6"></script>
   <script>
   /* Firebase (แจ้งเตือนเข้ามือถือ) — ค่าสาธารณะ ไม่ใช่ข้อมูลลับ */
   window.ITC_FCM = {
@@ -3727,19 +3734,18 @@
       var html = (s.upgraded ? '' : banner()) + '<div class="settings-grid">' +
         '<section class="panel"><div class="panel-head"><h2 class="panel-title">พนักงานและสิทธิ์</h2>' +
           '<button class="btn btn-primary btn-sm" type="button" id="addUserBtn">' + icon('plus') + 'เพิ่มพนักงาน</button></div>' +
-        '<table class="task-table settings-table"><thead><tr><th>ชื่อที่แสดง</th><th>ชื่อผู้ใช้</th><th>บทบาท</th><th>ทีม</th><th>บัญชี</th><th>รหัสผ่าน</th><th></th></tr></thead><tbody>' +
+        '<div class="settings-wrap"><table class="task-table settings-table users-table"><thead><tr><th>พนักงาน</th><th>บทบาท</th><th>ทีม</th><th>บัญชี / รหัสผ่าน</th><th></th></tr></thead><tbody>' +
         users.map(function (u) {
-          return '<tr><td data-label="ชื่อที่แสดง">' + personHtml(u.name) + '</td><td data-label="ชื่อผู้ใช้">' + esc(u.username) +
+          return '<tr><td data-label="พนักงาน">' + personHtml(u.name) + '<div class="task-meta">ชื่อผู้ใช้: ' + esc(u.username) + '</div>' +
             (s.emailReady ? '<div class="task-meta">' + (u.email ? '✉ ' + esc(u.email) : 'ยังไม่มีอีเมล') + '</div>' : '') + '</td>' +
             '<td data-label="บทบาท"><span class="role-tag r-' + u.role + '">' + esc(u.roleLabel) + '</span>' +
               ((u.reviewFor || []).length ? '<div class="task-meta">ตรวจงานแทน ' + esc(u.reviewFor.join(', ')) + '</div>' : '') + '</td>' +
             '<td data-label="ทีม">' + (u.depts.length ? u.depts.map(function (d) { return '<span class="team-chip">' + esc(d) + '</span>'; }).join(' ') : '<span class="muted">ยังไม่ระบุ</span>') + '</td>' +
-            '<td data-label="บัญชี">' + (u.active ? '<span class="pill tone-done">ใช้งาน</span>' : '<span class="pill tone-neutral">ปิดใช้งาน</span>') + '</td>' +
-            '<td data-label="รหัสผ่าน">' + (pwText[u.passwordState] || '') + '</td>' +
-            '<td class="cell-action"><button class="btn btn-sm" type="button" data-edit-user="' + esc(u.username) + '">แก้ไข</button> ' +
+            '<td data-label="บัญชี / รหัสผ่าน"><div class="acct-cell">' + (u.active ? '<span class="pill tone-done">ใช้งาน</span>' : '<span class="pill tone-neutral">ปิดใช้งาน</span>') + (pwText[u.passwordState] || '') + '</div></td>' +
+            '<td class="cell-action"><div class="row-actions"><button class="btn btn-sm" type="button" data-edit-user="' + esc(u.username) + '">แก้ไข</button> ' +
             (u.username === me().username ? '' : '<button class="btn btn-sm" type="button" data-reset-user="' + esc(u.username) + '">รีเซ็ตรหัสผ่าน</button> ' +
-              '<button class="btn btn-sm" type="button" data-transfer-user="' + esc(u.username) + '" title="โอนงานที่ยังไม่เสร็จของคนนี้ให้คนอื่น หรือยกเลิกงาน (เช่น ก่อนปิดบัญชีคนที่ลาออก)">โอน/ยกเลิกงาน</button>') + '</td></tr>';
-        }).join('') + '</tbody></table></section>' +
+              '<button class="btn btn-sm" type="button" data-transfer-user="' + esc(u.username) + '" title="โอนงานที่ยังไม่เสร็จของคนนี้ให้คนอื่น หรือยกเลิกงาน (เช่น ก่อนปิดบัญชีคนที่ลาออก)">โอน/ยกเลิกงาน</button>') + '</div></td></tr>';
+        }).join('') + '</tbody></table></div></section>' +
 
         '<section class="panel"><div class="panel-head"><h2 class="panel-title">ทีม</h2><span class="count">ใช้เป็นตัวเลือก "ทีมที่รับงาน" และทีมของพนักงาน</span></div>' +
         '<table class="task-table settings-table"><thead><tr><th>ชื่อทีม</th><th class="num">พนักงาน</th><th class="num">งานที่มอบให้ทีม</th><th></th></tr></thead><tbody>' +
