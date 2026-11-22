@@ -434,6 +434,8 @@
       .cal-opts .seg { width: 100%; } .cal-opts .seg button { flex: 1; padding: 8px 6px; font-size: 13px; }
     }
 
+    .tr-sec { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .tr-sec .table-wrap { margin-top: 10px; }
     .empty { padding: 44px 20px; text-align: center; color: var(--text-muted); }
     .empty .icon { width: 36px; height: 36px; color: var(--text-faint); margin-bottom: 6px; }
 
@@ -950,7 +952,7 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=2026-11-23-4"></script>
+  <script src="config.js?v=2026-11-23-5"></script>
   <script>
   /* Firebase (แจ้งเตือนเข้ามือถือ) — ค่าสาธารณะ ไม่ใช่ข้อมูลลับ */
   window.ITC_FCM = {
@@ -3735,7 +3737,8 @@
             '<td data-label="บัญชี">' + (u.active ? '<span class="pill tone-done">ใช้งาน</span>' : '<span class="pill tone-neutral">ปิดใช้งาน</span>') + '</td>' +
             '<td data-label="รหัสผ่าน">' + (pwText[u.passwordState] || '') + '</td>' +
             '<td class="cell-action"><button class="btn btn-sm" type="button" data-edit-user="' + esc(u.username) + '">แก้ไข</button> ' +
-            (u.username === me().username ? '' : '<button class="btn btn-sm" type="button" data-reset-user="' + esc(u.username) + '">รีเซ็ตรหัสผ่าน</button>') + '</td></tr>';
+            (u.username === me().username ? '' : '<button class="btn btn-sm" type="button" data-reset-user="' + esc(u.username) + '">รีเซ็ตรหัสผ่าน</button> ' +
+              '<button class="btn btn-sm" type="button" data-transfer-user="' + esc(u.username) + '" title="โอนงานที่ยังไม่เสร็จของคนนี้ให้คนอื่น หรือยกเลิกงาน (เช่น ก่อนปิดบัญชีคนที่ลาออก)">โอน/ยกเลิกงาน</button>') + '</td></tr>';
         }).join('') + '</tbody></table></section>' +
 
         '<section class="panel"><div class="panel-head"><h2 class="panel-title">ทีม</h2><span class="count">ใช้เป็นตัวเลือก "ทีมที่รับงาน" และทีมของพนักงาน</span></div>' +
@@ -3771,6 +3774,10 @@
         openUserForm(s.users.filter(function (u) { return u.username === b.getAttribute('data-edit-user'); })[0]);
       }); });
       $$('[data-reset-user]').forEach(function (b) { b.addEventListener('click', function () { confirmReset(b.getAttribute('data-reset-user')); }); });
+      $$('[data-transfer-user]').forEach(function (b) { b.addEventListener('click', function () {
+        var u = s.users.filter(function (x) { return x.username === b.getAttribute('data-transfer-user'); })[0];
+        if (u) startTransfer(u, null);
+      }); });
       $$('[data-del-team]').forEach(function (b) { b.addEventListener('click', function () { confirmDeleteTeam(b.getAttribute('data-del-team')); }); });
       $('#teamForm').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -3817,6 +3824,7 @@
       var foot = '<button class="btn" type="button" data-close>ยกเลิก</button><button class="btn btn-primary" type="submit" form="userForm" id="uuSave">' + (isNew ? 'เพิ่มพนักงาน' : 'บันทึก') + '</button>';
       openModal(isNew ? 'เพิ่มพนักงาน' : 'แก้ไข ' + u.name, body, foot);
       focusFirst();
+      var transferOk = false;                 // ตรวจงานค้างแล้ว (ปิดบัญชีได้)
       $('#userForm').addEventListener('submit', function (e) {
         e.preventDefault();
         var data = {
@@ -3833,6 +3841,14 @@
           if (data.email && !/^[^\s@,;<>]+@[^\s@,;<>]+\.[a-z]{2,}$/.test(data.email)) { showError('#uuError', 'รูปแบบอีเมลไม่ถูกต้อง'); $('#uuEmail').focus(); return; }
         }
         if (isNew && (!data.username || !data.name)) { showError('#uuError', 'กรุณากรอกชื่อผู้ใช้และชื่อที่แสดง'); return; }
+        if (!isNew && u.active && !data.active && !transferOk) {      // กำลังปิดบัญชี → ตรวจงานที่ยังไม่เสร็จก่อน
+          var sv = $('#uuSave'); sv.disabled = true;
+          callAuthed('adminOffboardPreview', u.username).then(function (pv) {
+            if (pv.owner.length || pv.reviewer.length || pv.assigner.length) { closeModal(true); openTransfer(u, pv, data); }
+            else { transferOk = true; sv.disabled = false; if ($('#userForm').requestSubmit) $('#userForm').requestSubmit(); else sv.click(); }
+          }).catch(function (err) { sv.disabled = false; if (!err.handled) showError('#uuError', 'ตรวจงานค้างไม่สำเร็จ: ' + cleanError(err)); });
+          return;
+        }
         runAction($('#uuSave'), 'กำลังบันทึก…', '#uuError', function () { return callAuthed('adminSaveUser', data); }, function (res) {
           if (res.tempPassword) showTempPassword(res.user.name, res.user.username, res.tempPassword, 'เพิ่มพนักงานแล้ว');
           else { closeModal(true); toast('บันทึกข้อมูล ' + res.user.name + ' แล้ว'); }
@@ -3840,6 +3856,110 @@
         });
       });
     }
+
+    /* ---------------- โอนงาน (ผู้ดูแลระบบ) — เช่น ก่อนปิดบัญชีคนที่ลาออก ---------------- */
+    function startTransfer(u, disableData) {
+      toast('กำลังตรวจงานที่ยังไม่เสร็จของ ' + u.name + '…');
+      callAuthed('adminOffboardPreview', u.username).then(function (pv) { openTransfer(u, pv, disableData); })
+        .catch(function (err) { if (!err.handled) toast('ตรวจงานไม่สำเร็จ: ' + cleanError(err)); });
+    }
+    function userSaveData(u, active) {
+      var d = { isNew: false, username: u.username, name: u.name, role: u.role, active: active, depts: (u.depts || []).slice(), reviewFor: (u.reviewFor || []).slice() };
+      if (state.settings.emailReady) d.email = u.email || '';
+      return d;
+    }
+    function openTransfer(u, pv, disableData) {
+      var req = uuid();
+      var people = state.settings.users.filter(function (x) { return x.active && x.name !== u.name; })
+        .sort(function (a, b) { return (shareDeptWith(b, u) - shareDeptWith(a, u)) || a.name.localeCompare(b.name, 'th'); });
+      var personOpts = function (sel) { return people.map(function (p) { return '<option value="' + esc(p.name) + '"' + (p.name === sel ? ' selected' : '') + '>' + esc(p.name) + ((p.depts || []).length ? ' · ' + esc(p.depts.join(', ')) : '') + '</option>'; }).join(''); };
+      var total = pv.owner.length + pv.reviewer.length + pv.assigner.length;
+      var body = '<p>งานที่ยังไม่เสร็จของ <strong>' + esc(u.name) + '</strong>: รับผิดชอบ <b>' + pv.owner.length + '</b> · เป็นผู้ตรวจ <b>' + pv.reviewer.length + '</b> · เป็นผู้มอบหมาย <b>' + pv.assigner.length + '</b></p>';
+      if (!total) body += '<div class="notice notice-info">ไม่มีงานค้าง' + (disableData ? ' — ปิดบัญชีได้เลย' : '') + '</div>';
+      if (pv.owner.length) {
+        body += '<section class="tr-sec"><h3 class="action-title">1. งานที่รับผิดชอบ (' + pv.owner.length + ')</h3>' +
+          '<div class="field"><label for="trAll">ทั้งหมด</label><select class="select" id="trAll"><option value="__keep">— เลือกคนรับงานต่อ หรือยกเลิกงาน —</option>' +
+            '<option value="__cancel">✕ ยกเลิกงานทั้งหมดไปเลย</option><optgroup label="โอนทั้งหมดให้">' + personOpts('') + '</optgroup></select>' +
+          '<span class="hint">เลือกแยกรายงานได้ที่ช่องท้ายแต่ละแถว (โอนให้คนอื่น / ยกเลิกงานนั้น / ยังไม่ทำอะไร)</span></div>' +
+          '<div class="table-wrap"><table class="task-table"><thead><tr><th>งาน</th><th>กำหนดส่ง</th><th>ผู้รับผิดชอบตอนนี้</th><th>โอนให้ / ยกเลิก</th></tr></thead><tbody>' +
+          pv.owner.map(function (t) {
+            var others = t.owners.filter(function (n) { return n !== u.name; });
+            return '<tr><td data-label="งาน"><b>' + esc(t.id) + '</b> ' + esc(t.title) + '<div class="task-meta">' + esc(t.status) + (t.team ? ' · ทีม ' + esc(t.team) : '') + '</div></td>' +
+              '<td data-label="กำหนดส่ง">' + esc(thaiDate(t.dueDate) || '—') + '</td><td data-label="ผู้รับผิดชอบตอนนี้">' + esc(t.owners.join(', ')) + '</td>' +
+              '<td data-label="โอนให้ / ยกเลิก"><select class="select tr-row" data-id="' + esc(t.id) + '"><option value="__keep">— ยังไม่ทำอะไร —</option>' +
+                '<option value="__cancel">✕ ยกเลิกงานนี้ไปเลย</option>' +
+                ((others.length || t.team) ? '<option value="__remove">เอาชื่อออกเฉย ๆ' + (others.length ? ' (เหลือ ' + esc(others.join(', ')) + ')' : ' (คืนให้ทีม ' + esc(t.team) + ')') + '</option>' : '') +
+                '<optgroup label="โอนให้">' + personOpts('') + '</optgroup></select></td></tr>';
+          }).join('') + '</tbody></table></div></section>';
+      }
+      if (pv.reviewer.length) body += '<section class="tr-sec"><h3 class="action-title">' + (pv.owner.length ? '2' : '1') + '. งานที่เป็นผู้ตรวจ (' + pv.reviewer.length + ')</h3>' +
+        '<div class="field"><label for="trRev">เปลี่ยนผู้ตรวจเป็น</label><select class="select" id="trRev"><option value="">— ไม่เปลี่ยน —</option>' + personOpts('') + '</select>' +
+        '<span class="hint">' + esc(pv.reviewer.map(function (t) { return t.id; }).join(', ')) + ' · ถ้าคนที่เลือกเป็นผู้รับผิดชอบงานนั้น ระบบจะข้ามงานนั้นและแจ้งให้</span></div></section>';
+      if (pv.assigner.length) body += '<section class="tr-sec"><h3 class="action-title">' + (1 + (pv.owner.length ? 1 : 0) + (pv.reviewer.length ? 1 : 0)) + '. งานที่เป็นผู้มอบหมาย (' + pv.assigner.length + ')</h3>' +
+        '<div class="field"><label for="trAsg">งานที่ ' + esc(u.name) + ' มอบหมายไว้</label><select class="select" id="trAsg"><option value="">— ไม่เปลี่ยน —</option>' +
+          '<option value="__cancel">✕ ยกเลิกงานเหล่านี้ทั้งหมด</option><optgroup label="เปลี่ยนผู้มอบหมายเป็น">' + personOpts('') + '</optgroup></select>' +
+        '<span class="hint">ผู้มอบหมายคนใหม่จะแก้ไข/ยกเลิกงานเหล่านี้ได้แทน · ' + esc(pv.assigner.map(function (t) { return t.id; }).join(', ')) + '</span></div></section>';
+      if (total) body += '<div class="field" id="trReasonBox" hidden style="margin-top:12px"><label for="trReason">เหตุผลที่ยกเลิกงาน <span class="hint">(บันทึกในประวัติของงานที่ยกเลิก)</span></label>' +
+        '<textarea class="textarea" id="trReason" maxlength="1000" style="min-height:60px">' + esc(u.name + ' ลาออก / ปิดบัญชี — ไม่ต้องทำงานนี้ต่อ') + '</textarea></div>';
+      if (u.active) body += '<label class="check-line" style="display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer"><input type="checkbox" id="trDisable"' + (disableData ? ' checked' : '') + '> ปิดบัญชี ' + esc(u.name) + ' หลังโอนงาน</label>';
+      body += '<div id="trError" style="margin-top:10px"></div>';
+      var foot = '<button class="btn" type="button" data-close>ยกเลิก</button><button class="btn btn-primary" type="button" id="trGo">' + (total ? 'ยืนยัน' : 'ปิดบัญชี') + '</button>';
+      openModal('โอน / ยกเลิกงานของ ' + u.name, body, foot, true);
+      var touched = {};
+      var syncReason = function () {
+        var any = $$('.tr-row').some(function (x) { return x.value === '__cancel'; }) || ($('#trAsg') && $('#trAsg').value === '__cancel');
+        if ($('#trReasonBox')) $('#trReasonBox').hidden = !any;
+      };
+      if ($('#trAll')) $('#trAll').addEventListener('change', function () {
+        var v = this.value;
+        $$('.tr-row').forEach(function (sel) { if (!touched[sel.getAttribute('data-id')]) sel.value = v; });
+        syncReason();
+      });
+      $$('.tr-row').forEach(function (sel) { sel.addEventListener('change', function () { touched[sel.getAttribute('data-id')] = true; syncReason(); }); });
+      if ($('#trAsg')) $('#trAsg').addEventListener('change', syncReason);
+      $('#trGo').addEventListener('click', function () {
+        var asg = $('#trAsg') ? $('#trAsg').value : '';
+        var plan = { owners: {}, cancel: [], reviewer: $('#trRev') ? $('#trRev').value : '', assigner: asg === '__cancel' ? '' : asg, cancelReason: $('#trReason') ? $('#trReason').value.trim() : '' };
+        $$('.tr-row').forEach(function (sel) {
+          var id = sel.getAttribute('data-id');
+          if (sel.value === '__cancel') plan.cancel.push(id);
+          else if (sel.value !== '__keep') plan.owners[id] = sel.value === '__remove' ? '' : sel.value;
+        });
+        if (asg === '__cancel') pv.assigner.forEach(function (t) { if (plan.cancel.indexOf(t.id) === -1) plan.cancel.push(t.id); });
+        if (plan.cancel.length && !plan.cancelReason) { showError('#trError', 'กรุณาระบุเหตุผลที่ยกเลิกงาน'); $('#trReason').focus(); return; }
+        var disable = $('#trDisable') && $('#trDisable').checked;
+        var n = Object.keys(plan.owners).length + plan.cancel.length + (plan.reviewer ? 1 : 0) + (plan.assigner ? 1 : 0);
+        if (total && !n && !disable) { showError('#trError', 'ยังไม่ได้เลือกคนรับงานต่อ'); return; }
+        var save = disableData ? Object.assign({}, disableData, { active: false }) : userSaveData(u, false);
+        runAction($('#trGo'), 'กำลังบันทึก…', '#trError', function () {
+          var p1 = n ? callAuthed('adminTransferTasks', u.username, plan, req) : Promise.resolve(null);
+          return p1.then(function (res) {
+            var left = res ? res.left.owner + res.left.reviewer + res.left.assigner : total;
+            if (!disable || (left && n)) return { res: res, held: disable && left > 0 };     // ยังมีงานค้าง → ยังไม่ปิดบัญชี ให้ตัดสินใจอีกครั้ง
+            return callAuthed('adminSaveUser', save).then(function () { return { res: res, disabled: true }; });
+          });
+        }, function (out) {
+          var r = out.res;
+          var msg = (r ? 'จัดการแล้ว ' + r.tasks + ' งาน' + (r.cancelled ? ' (ยกเลิก ' + r.cancelled + ' · โอน ' + (r.tasks - r.cancelled) + ')' : '') : '') + (out.disabled ? (r ? ' · ' : '') + 'ปิดบัญชี ' + u.name + ' แล้ว' : '');
+          if (r && (r.skipped.length || r.left.owner || r.left.reviewer || r.left.assigner)) {
+            openModal('ผลการโอนงาน', '<p>' + esc(msg) + '</p>' +
+              (r.skipped.length ? '<div class="notice notice-warn"><strong>ข้าม ' + r.skipped.length + ' งาน</strong><ul style="margin:6px 0 0;padding-left:18px">' +
+                r.skipped.map(function (x) { return '<li>' + esc(x.id) + ' — ' + esc(x.reason) + '</li>'; }).join('') + '</ul></div>' : '') +
+              ((r.left.owner || r.left.reviewer || r.left.assigner) ? '<div class="notice notice-info" style="margin-top:8px">ยังเหลืองานของ ' + esc(u.name) + ': รับผิดชอบ ' + r.left.owner + ' · ผู้ตรวจ ' + r.left.reviewer + ' · ผู้มอบหมาย ' + r.left.assigner + ' — กด "โอน/ยกเลิกงาน" ที่ชื่อพนักงานเพื่อจัดการต่อ' +
+                (out.held ? '<br><strong>ยังไม่ได้ปิดบัญชี</strong> เพราะยังมีงานค้าง' : '') + '</div>' : '') + '<div id="trError2" style="margin-top:8px"></div>',
+              (out.held ? '<button class="btn" type="button" id="trForce">ปิดบัญชีเลย (งานที่เหลือจะค้างชื่อ ' + esc(u.name) + ')</button>' : '') +
+              '<button class="btn btn-primary" type="button" data-close>รับทราบ</button>');
+            if ($('#trForce')) $('#trForce').addEventListener('click', function () {
+              runAction($('#trForce'), 'กำลังปิดบัญชี…', '#trError2', function () { return callAuthed('adminSaveUser', save); }, function () {
+                closeModal(true); toast('ปิดบัญชี ' + u.name + ' แล้ว'); renderSettings(); reloadQuiet();
+              });
+            });
+          } else { closeModal(true); toast(msg || 'บันทึกแล้ว'); }
+          renderSettings(); reloadQuiet();
+        });
+      });
+    }
+    function shareDeptWith(a, b) { return (a.depts || []).some(function (d) { return (b.depts || []).indexOf(d) > -1; }) ? 1 : 0; }
 
     function showTempPassword(name, username, pw, title) {
       openModal(title, '<p>ส่งข้อมูลนี้ให้ <strong>' + esc(name) + '</strong> ทาง<strong>ช่องทางส่วนตัว</strong> (ไม่ส่งในกลุ่มรวม)</p>' +
